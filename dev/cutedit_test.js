@@ -1,13 +1,14 @@
 // Tests for the CEP panel's cut editor (docs/dsgarage/CUT_EDIT_SPEC.md §9.1) on the emulated AE object model (dev/aeom.js).
 //   node dev/cutedit_test.js              run every test (needs JIZURA_AE.jsx, and build/com.852wa.jizura from build_cep.py)
 //   node dev/cutedit_test.js --baseline   rewrite dev/cutedit_baseline.json from the current engine (T-1: only on a known-good engine)
+//   JZ_AE_JSX=<path> node dev/cutedit_test.js --baseline   … from another build of JIZURA_AE.jsx (e.g. the engine before a change)
 const fs = require('fs'), vm = require('vm'), path = require('path'), crypto = require('crypto');
 const AEOM = require('./aeom');
 const ROOT = path.join(__dirname, '..');
 const BASELINE = path.join(__dirname, 'cutedit_baseline.json');
 const EXPORTS = 'thisObj.__jz = { jzMakePlan: jzMakePlan, jzBuild: jzBuild, log: function () { return JZLOG; }, JZ_DATA: JZ_DATA, JZ_REG: JZ_REG, jzOrder: jzOrder, jzMoodEnabled: jzMoodEnabled, jzParseJSON: jzParseJSON, jzFitContrast: jzFitContrast, jzMixHex: jzMixHex, jzKeyStyle: jzKeyStyle' +
   (process.argv.includes('--baseline') ? '' : ', jzCutCtx: jzCutCtx, JZ_CUTEDIT: JZ_CUTEDIT') + ' };\n})(this);';
-const SRC = fs.readFileSync(path.join(ROOT, 'JIZURA_AE.jsx'), 'utf8').replace(/^#target.*\n/, '').replace(/jzUI\(thisObj\);\s*\}\)\(this\);\s*$/, EXPORTS);
+const SRC = fs.readFileSync(process.env.JZ_AE_JSX || path.join(ROOT, 'JIZURA_AE.jsx'), 'utf8').replace(/^#target.*\n/, '').replace(/jzUI\(thisObj\);\s*\}\)\(this\);\s*$/, EXPORTS);
 // ExtendScript is ES3: run the engine in a realm without ES5+ built-ins (same as dev/ae_test.js)
 const ES3_PRELUDE = `(function(){
   function del(o, list) { for (var i = 0; i < list.length; i++) delete o[list[i]]; }
@@ -53,7 +54,8 @@ function fingerprint(env) {
   }));
   const s = env.stats;
   return { comps: s.comps, layers: s.layers, exprs: s.exprs, animators: s.animators, effects: Object.values(s.effects).reduce((a, b) => a + b, 0),
-    hash: crypto.createHash('sha1').update(JSON.stringify(comps)).digest('hex') };
+    // numbers to 9 significant digits: the last bits of Math.* can differ between CPUs (arm64 / x86_64), the output of the engine does not
+    hash: crypto.createHash('sha1').update(JSON.stringify(comps, (k, v) => (typeof v === 'number' ? +v.toPrecision(9) : v))).digest('hex') };
 }
 
 // ---------------------------------------------------------------- plans: every style x 3 seeds (the same set as dev/ae_test.js)

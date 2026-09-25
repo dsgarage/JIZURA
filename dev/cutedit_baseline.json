@@ -5,7 +5,7 @@
   "exprs": 1892,
   "animators": 144,
   "effects": 175,
-  "hash": "7791591cbe3c2f1e860f7feb864691d8c6f95c86"
+  "hash": "b4870a499ddf76f7d75efc221caadb36f2595aa7"
  },
  "noir/7+": {
   "comps": 59,
@@ -13,7 +13,7 @@
   "exprs": 2324,
   "animators": 163,
   "effects": 249,
-  "hash": "cc95817398aced8830153fc3945b61597e7521a1"
+  "hash": "8bc51d5b64aa54119d56c781c571d09e692901aa"
  },
  "noir/42+-wa": {
   "comps": 59,
@@ -21,7 +21,7 @@
   "exprs": 3232,
   "animators": 167,
   "effects": 191,
-  "hash": "a0f398605da98c860d83cbb84b545c3579e28c90"
+  "hash": "5f637e72145fb41c460033638c2e89069bc4f81d"
  },
  "crimson/1": {
   "comps": 57,
@@ -29,7 +29,7 @@
   "exprs": 1751,
   "animators": 184,
   "effects": 197,
-  "hash": "2115964b920d79e99d8667f86c5f95ffe8fe219f"
+  "hash": "6922cb0f5a01149257a963dc69439b8784986cb7"
  },
  "crimson/7+": {
   "comps": 58,
@@ -37,7 +37,7 @@
   "exprs": 2522,
   "animators": 192,
   "effects": 249,
-  "hash": "a37bd6eb1a546f865bb3aeda4aab419f2a6c7e8c"
+  "hash": "905c487e71e53eb3427a63b27cfbe88524b375e7"
  },
  "crimson/42+-wa": {
   "comps": 60,
@@ -45,7 +45,7 @@
   "exprs": 2714,
   "animators": 178,
   "effects": 243,
-  "hash": "9a629357756211770db1750b7e7ad1232efb016a"
+  "hash": "8aae6cbc517906be744893b5aeec35f8bfa10795"
  },
  "caution/1": {
   "comps": 57,
@@ -53,7 +53,7 @@
   "exprs": 1755,
   "animators": 191,
   "effects": 188,
-  "hash": "0fd54d92c22b4dec0611604a268e1c14bd83a91f"
+  "hash": "dccdaaaa7b8fe9cf545ce3cc0b625cea71695898"
  },
  "caution/7+": {
   "comps": 58,
@@ -61,7 +61,7 @@
   "exprs": 1985,
   "animators": 152,
   "effects": 331,
-  "hash": "9db8cd3156315cb9735d5a2cf19e79b21d2d375a"
+  "hash": "4c3425874c8c0d8963d00080c4f98c376d460cf4"
  },
  "caution/42+-wa": {
   "comps": 59,
@@ -69,7 +69,7 @@
   "exprs": 3240,
   "animators": 208,
   "effects": 239,
-  "hash": "0c14e911f48545aa5f30131e2c17c5fa7afdf49e"
+  "hash": "d216ec4f814b829ddfc4a7159b73ce36a9caa3fb"
  },
  "magenta/1": {
   "comps": 57,
@@ -77,7 +77,7 @@
   "exprs": 2065,
   "animators": 153,
   "effects": 198,
-  "hash": "e07f8d263417ae79746bd019303d527192d8dff3"
+  "hash": "79373b9e71aedee0f8d7399bf01d8ef7576ddc99"
  },
  "magenta/7+": {
   "comps": 59,
@@ -85,7 +85,7 @@
   "exprs": 2068,
   "animators": 138,
   "effects": 257,
-  "hash": "e09b9e845eb165300d5d11af9d963236287a5064"
+  "hash": "187db9464b7ac4230f4c060568b0f01976c1424c"
  },
  "magenta/42+-wa": {
   "comps": 59,
@@ -93,7 +93,7 @@
   "exprs": 3102,
   "animators": 225,
   "effects": 210,
-  "hash": "b9d5993fbd2ae7f549554016ec47f9f6141203c7"
+  "hash": "d6027d912233df1b33fb77e79276fff955087daa"
  },
  "paper/1": {
   "comps": 57,
@@ -101,7 +101,7 @@
   "exprs": 1930,
   "animators": 158,
   "effects": 215,
-  "hash": "83848365720af78ad9d2ecc9d4a1943cb94d2bea"
+  "hash": "0f70ca707bb1c022cef2506fc9ae357edd57858b"
  },
  "paper/7+": {
   "comps": 59,
@@ -109,7 +109,7 @@
   "exprs": 2301,
   "animators": 151,
   "effects": 263,
-  "hash": "252e1fe34e20e62217b67307ca9ec338d88436cd"
+  "hash": "854c25ab8d417e3e5587523e5c04dcbe7619336d"
  },
  "paper/42+-wa": {
   "comps": 58,
@@ -117,7 +117,7 @@
   "exprs": 2674,
   "animators": 198,
   "effects": 239,
-  "hash": "e5a40385e1f6f1d309fb5c75c8d48ddabcdee1fe"
+  "hash": "5b1d8fac46ee7a6437b29cf7f3bb1efb0a8c897a"
  },
  "hud/1": {
   "comps": 57,
@@ -125,7 +125,7 @@
   "exprs": 2034,
   "animators": 193,
   "effects": 172,
-  "hash": "5390346eda17f0bca47f9f0ee32c10fa0aeea39d"
+  "hash": "e1db2177306c9d089f2119cbec8076db1b78ec4c"
  },
  "hud/7+": {
   "comps": 58,
@@ -133,7 +133,7 @@
   "exprs": 2144,
   "animators": 212,
   "effects": 313,
-  "hash": "e8f55a06faa5c896020c2baf6cde41205692d9fa"
+  "hash": "d674ef378074fe3d60076403fae1f0f671099333"
  },
  "hud/42+-wa": {
   "comps": 59,
@@ -141,7 +141,7 @@
   "exprs": 2712,
   "animators": 233,
   "effects": 208,
-  "hash": "6acc79099145504e5b9ecedb66a7d041f37276e9"
+  "hash": "22a4b278a2dc658faa98e0d1e641336e85509c83"
  },
  "mint/1": {
   "comps": 58,
@@ -149,7 +149,7 @@
   "exprs": 1938,
   "animators": 160,
   "effects": 198,
-  "hash": "467b90d915c47df004066b97ab0730f3e00e2db6"
+  "hash": "6a2e0e7eb721b805d76409f15acff768e5ae901c"
  },
  "mint/7+": {
   "comps": 59,
@@ -157,7 +157,7 @@
   "exprs": 2091,
   "animators": 205,
   "effects": 249,
-  "hash": "f7df70e1424c7cd883a5a07030450a428d149cde"
+  "hash": "5b2dc2fd3d5db0da2e4a2bb035a2147a8fc7d31d"
  },
  "mint/42+-wa": {
   "comps": 60,
@@ -165,7 +165,7 @@
   "exprs": 3018,
   "animators": 231,
   "effects": 276,
-  "hash": "052038656d015155dfccea84e089cbb10eb70888"
+  "hash": "8bcb982fa441b77c7cec4a36f655e1b1b89dce3e"
  },
  "specimen/1": {
   "comps": 57,
@@ -173,7 +173,7 @@
   "exprs": 1739,
   "animators": 133,
   "effects": 211,
-  "hash": "1f0a3fe51a490e08ce6bfb7ad5d07a9e3fa48f9b"
+  "hash": "7a03401469ea6eda0cdec538c22a3a4e3822edd9"
  },
  "specimen/7+": {
   "comps": 59,
@@ -181,7 +181,7 @@
   "exprs": 2268,
   "animators": 149,
   "effects": 258,
-  "hash": "4fd4b0610c4da6450174441b68c8fb489c0b2bf3"
+  "hash": "0459d8323dab0e446062905f2eb4f5f2d5d968bc"
  },
  "specimen/42+-wa": {
   "comps": 58,
@@ -189,7 +189,7 @@
   "exprs": 3286,
   "animators": 123,
   "effects": 255,
-  "hash": "c7bb9674ab41deb830af1166723645026f79b84e"
+  "hash": "2ae97172be26b0216c5664783153615f17a0d7cc"
  },
  "transit/1": {
   "comps": 57,
@@ -197,7 +197,7 @@
   "exprs": 1871,
   "animators": 147,
   "effects": 256,
-  "hash": "b825f4d551de78ec0b34850a9c8d538ffb22779c"
+  "hash": "d87745d3106899cbcc4aefe9f0d20e8ec1424405"
  },
  "transit/7+": {
   "comps": 58,
@@ -205,7 +205,7 @@
   "exprs": 2029,
   "animators": 140,
   "effects": 279,
-  "hash": "ab54320697f9a533b1730a9bd2dd430da103b700"
+  "hash": "6c8b486af5969a7f3c19e3e823b2eb793a1f2499"
  },
  "transit/42+-wa": {
   "comps": 59,
@@ -213,7 +213,7 @@
   "exprs": 2819,
   "animators": 180,
   "effects": 263,
-  "hash": "ba87fed323f2f8da5ddf67295ca13bce36d42965"
+  "hash": "29ca578fbff11fef95705eb9c629d0d869ef1785"
  },
  "blueprint/1": {
   "comps": 58,
@@ -221,7 +221,7 @@
   "exprs": 1714,
   "animators": 207,
   "effects": 180,
-  "hash": "555c862b6f5dc76f94bee96e35241b77fc76ebdc"
+  "hash": "eff28c220060365519e1db15cc92a8f72a5b46b8"
  },
  "blueprint/7+": {
   "comps": 59,
@@ -229,7 +229,7 @@
   "exprs": 2443,
   "animators": 189,
   "effects": 302,
-  "hash": "e0b099574bc46eab421f4aa91d4bc95bd684dfb5"
+  "hash": "6e3ba6d0bf398c30e45dccc10c16e7de9ddd344b"
  },
  "blueprint/42+-wa": {
   "comps": 59,
@@ -237,7 +237,7 @@
   "exprs": 3366,
   "animators": 187,
   "effects": 213,
-  "hash": "eafd8e64f33ffa1a372de9671602a103be8cde25"
+  "hash": "24d110296fced4d604ddd90fb58846200edf3a22"
  },
  "rouge/1": {
   "comps": 57,
@@ -245,7 +245,7 @@
   "exprs": 1957,
   "animators": 151,
   "effects": 217,
-  "hash": "caebb63b3b9a51e7ab8773e90ec4ff20a2a53121"
+  "hash": "e863a0b3aa3ce87f82e0826aad962862698ff3e3"
  },
  "rouge/7+": {
   "comps": 59,
@@ -253,7 +253,7 @@
   "exprs": 2147,
   "animators": 217,
   "effects": 250,
-  "hash": "13fb242e7ea76ff301f338a3ff718eba68cfe353"
+  "hash": "d61e88de4c51abf1b5062d64ebd1124f2cf594bc"
  },
  "rouge/42+-wa": {
   "comps": 59,
@@ -261,7 +261,7 @@
   "exprs": 3228,
   "animators": 118,
   "effects": 242,
-  "hash": "ba5691801cb1c97284f8bf62a57b8719af69ec33"
+  "hash": "9afd10f6711bc0c8af1ffce17ff6a045d086a56e"
  },
  "mono/1": {
   "comps": 57,
@@ -269,7 +269,7 @@
   "exprs": 2066,
   "animators": 189,
   "effects": 193,
-  "hash": "d30862f518ce1f7bdeda994a3d378b6d90677a1f"
+  "hash": "f237fc43f190191c89f2a00a658466d2fb993708"
  },
  "mono/7+": {
   "comps": 58,
@@ -277,7 +277,7 @@
   "exprs": 1996,
   "animators": 152,
   "effects": 301,
-  "hash": "c63fc0d8c7e2ceb03b893ae0a16c9dbef36e8664"
+  "hash": "6b74bda9715fec22e06e02be8228d0dcab2d9116"
  },
  "mono/42+-wa": {
   "comps": 58,
@@ -285,7 +285,7 @@
   "exprs": 3274,
   "animators": 168,
   "effects": 198,
-  "hash": "eb0873c66a1d093b98573f689ce56fc135735a65"
+  "hash": "65bb3496692e147ea6e24bbebb1d6a58a42aa0be"
  },
  "sakura/1": {
   "comps": 58,
@@ -293,7 +293,7 @@
   "exprs": 2239,
   "animators": 278,
   "effects": 264,
-  "hash": "69d935cb5c357ff0b5308a40375a91544bb8bf33"
+  "hash": "4a3e3cd48a133776f872c6adaf60f8fc28680ca6"
  },
  "sakura/7+": {
   "comps": 58,
@@ -301,7 +301,7 @@
   "exprs": 1902,
   "animators": 166,
   "effects": 322,
-  "hash": "6ecf196de83b5075e4006efdac44b91b2adc04e3"
+  "hash": "2c26aba76178167cd70f61ce86814c9d5dce4e2d"
  },
  "sakura/42+-wa": {
   "comps": 59,
@@ -309,7 +309,7 @@
   "exprs": 3021,
   "animators": 183,
   "effects": 250,
-  "hash": "23f7c546ead27b20312c8236b96664dfdf5b7487"
+  "hash": "1849a862136585e43b0bf17d8dd542c32fc2eaae"
  },
  "ocean/1": {
   "comps": 58,
@@ -317,7 +317,7 @@
   "exprs": 3003,
   "animators": 222,
   "effects": 247,
-  "hash": "579c2b79511587d26978f77e51e35e2eea87b7c3"
+  "hash": "332746fbed07247f3d1cab632f470633586f2aac"
  },
  "ocean/7+": {
   "comps": 58,
@@ -325,7 +325,7 @@
   "exprs": 2001,
   "animators": 154,
   "effects": 270,
-  "hash": "b70435e756076d0a4ca092fbaef5dd3cf94d5777"
+  "hash": "b44fa113109f302837c1e8de9703303f3f29675e"
  },
  "ocean/42+-wa": {
   "comps": 59,
@@ -333,7 +333,7 @@
   "exprs": 3055,
   "animators": 206,
   "effects": 248,
-  "hash": "3c8da8638edae5d1fd6bfee9b9ac7195e5133eae"
+  "hash": "11c1cdd9ae0e57bf3f3d92927cae7115106fb012"
  },
  "sunset/1": {
   "comps": 58,
@@ -341,7 +341,7 @@
   "exprs": 1937,
   "animators": 179,
   "effects": 234,
-  "hash": "ffaa20581a70b543e275c4408845fadabba69a0f"
+  "hash": "93f3a526ed6c11929000a20ab382fafd8f6d992d"
  },
  "sunset/7+": {
   "comps": 58,
@@ -349,7 +349,7 @@
   "exprs": 2148,
   "animators": 159,
   "effects": 263,
-  "hash": "f2bcc3d92fb08057fbdc84d1ef4f5bf8f3e4ba88"
+  "hash": "708b690849a9b2ee2979163097d6a546ca187a21"
  },
  "sunset/42+-wa": {
   "comps": 58,
@@ -357,7 +357,7 @@
   "exprs": 3226,
   "animators": 179,
   "effects": 228,
-  "hash": "6da10bf8f12df4d7ea209bdbd91124004a454b34"
+  "hash": "c56f5a5751a139d5d5a98d8b289b9faf435b1db6"
  },
  "forest/1": {
   "comps": 58,
@@ -365,7 +365,7 @@
   "exprs": 2097,
   "animators": 240,
   "effects": 200,
-  "hash": "bee34a6f109242672452e8f48effbc678ca431ef"
+  "hash": "843caf73985a1c56600c2f5949f8cc49e072528b"
  },
  "forest/7+": {
   "comps": 58,
@@ -373,7 +373,7 @@
   "exprs": 2733,
   "animators": 384,
   "effects": 193,
-  "hash": "7376e9f30911cae5bb2bc251bb7989580e054a3e"
+  "hash": "b3cbfb398a93291829d3dc52e61f1741e6472ef9"
  },
  "forest/42+-wa": {
   "comps": 59,
@@ -381,7 +381,7 @@
   "exprs": 2776,
   "animators": 159,
   "effects": 252,
-  "hash": "3986e1ad90ef783a9558fb2d9f5592a71eca5afe"
+  "hash": "02c94afb8438e1dc25b117934c9cb761b37d1f6e"
  },
  "vapor/1": {
   "comps": 58,
@@ -389,7 +389,7 @@
   "exprs": 1969,
   "animators": 138,
   "effects": 224,
-  "hash": "f170dd1f2e8f68215621b04d45b7ed3c4f9d371c"
+  "hash": "af74fb3186748067008640b5ff9b97e99d9dd0c2"
  },
  "vapor/7+": {
   "comps": 59,
@@ -397,7 +397,7 @@
   "exprs": 1627,
   "animators": 174,
   "effects": 238,
-  "hash": "6cf571e16e07e80dd66729d4b2c7684be18586f2"
+  "hash": "4cea4449a911d2f497aaace50d79bb80907f50ff"
  },
  "vapor/42+-wa": {
   "comps": 59,
@@ -405,7 +405,7 @@
   "exprs": 2041,
   "animators": 136,
   "effects": 258,
-  "hash": "453217921b3241ec6697c97317029d81358447c9"
+  "hash": "da6ad9b350f49d809e73b1b6de26b4ed1a2eb77e"
  },
  "newsprint/1": {
   "comps": 58,
@@ -413,7 +413,7 @@
   "exprs": 1551,
   "animators": 188,
   "effects": 220,
-  "hash": "583e2fb6e343e09bbb32668656b278929cf9a606"
+  "hash": "23fd61b7d7e227c73aea1a248f7b9ade97a13ddd"
  },
  "newsprint/7+": {
   "comps": 58,
@@ -421,7 +421,7 @@
   "exprs": 2299,
   "animators": 145,
   "effects": 287,
-  "hash": "348d2acc31b27a82d43201d2db1599fd0a77822f"
+  "hash": "3cd21eec9760e17044f69d304f5e453772f6042f"
  },
  "newsprint/42+-wa": {
   "comps": 58,
@@ -429,7 +429,7 @@
   "exprs": 2476,
   "animators": 196,
   "effects": 247,
-  "hash": "28a296bc6aa862f71746631fb958a20889137661"
+  "hash": "8fd78f8a03d246c2d9a3ac2f77fdac34b7a2f27c"
  },
  "synth80/1": {
   "comps": 58,
@@ -437,7 +437,7 @@
   "exprs": 2314,
   "animators": 217,
   "effects": 277,
-  "hash": "d95ac110b3b35c387bbf178b03119675928cb193"
+  "hash": "c8dc9086ef24140cc9183ceb84c28f7ba923d239"
  },
  "synth80/7+": {
   "comps": 58,
@@ -445,7 +445,7 @@
   "exprs": 1954,
   "animators": 196,
   "effects": 223,
-  "hash": "f18e6c9731de89ad2491aec44cb0cb7c2e17fd85"
+  "hash": "c179ae8925a4f798067c07d7787dc2fcafb33af2"
  },
  "synth80/42+-wa": {
   "comps": 58,
@@ -453,7 +453,7 @@
   "exprs": 2429,
   "animators": 213,
   "effects": 266,
-  "hash": "8e724391972cb034f60f80dab3c2fa54b94b6597"
+  "hash": "69e92dd4cbb5f80bfa95c171025ebc8a139412ee"
  },
  "kraft/1": {
   "comps": 58,
@@ -461,7 +461,7 @@
   "exprs": 2095,
   "animators": 267,
   "effects": 227,
-  "hash": "714047e55fad5d36fe08df4bc74f76942c978ca8"
+  "hash": "39daf35ecea5d15c971dd566cea0fac23ef3df7b"
  },
  "kraft/7+": {
   "comps": 58,
@@ -469,7 +469,7 @@
   "exprs": 2299,
   "animators": 193,
   "effects": 299,
-  "hash": "2498beb3c2a74a75e1d5a9a7063627e9fdf1f1a9"
+  "hash": "a4532f7d435e4344ff72564ad659b800f8b8dcfa"
  },
  "kraft/42+-wa": {
   "comps": 59,
@@ -477,7 +477,7 @@
   "exprs": 2646,
   "animators": 230,
   "effects": 264,
-  "hash": "78ce5d788d7e0128d0a721e969a55c6bd1ff6596"
+  "hash": "50c16d94c38393fbf3d921ae0785c409c13b2a09"
  },
  "candy/1": {
   "comps": 58,
@@ -485,7 +485,7 @@
   "exprs": 2633,
   "animators": 106,
   "effects": 216,
-  "hash": "8af76a753e31ee02a172021718dbbdc01033c394"
+  "hash": "058037a26070e58cd21c80eb33c08356243d5817"
  },
  "candy/7+": {
   "comps": 58,
@@ -493,7 +493,7 @@
   "exprs": 2468,
   "animators": 156,
   "effects": 283,
-  "hash": "8544ef44fb417c8eac58ac49fed00c12bc31c238"
+  "hash": "903512f334a21a030e1aa5f98f9e5e4f5cf5277d"
  },
  "candy/42+-wa": {
   "comps": 59,
@@ -501,7 +501,7 @@
   "exprs": 2538,
   "animators": 128,
   "effects": 246,
-  "hash": "4e409624a7fada03a079a297e14ce60fbad069f5"
+  "hash": "711a537465516d9ba349d670ddf0a9e0389c2934"
  },
  "acid/1": {
   "comps": 58,
@@ -509,7 +509,7 @@
   "exprs": 2161,
   "animators": 189,
   "effects": 199,
-  "hash": "1e1be329f37b4b19ac9c18511914905e035482d2"
+  "hash": "6792be829cdf2be19fa6b188f4f05da7c4896f78"
  },
  "acid/7+": {
   "comps": 58,
@@ -517,7 +517,7 @@
   "exprs": 2830,
   "animators": 229,
   "effects": 275,
-  "hash": "2094b92fb23fa3f77881987d6ecf0459e6347891"
+  "hash": "5215a58c01429a18a7e5eafde9318a2a6c35b1d6"
  },
  "acid/42+-wa": {
   "comps": 58,
@@ -525,7 +525,7 @@
   "exprs": 2420,
   "animators": 163,
   "effects": 245,
-  "hash": "7cd719f900a4f15649dee5ddd6de30a83d8d89c6"
+  "hash": "47a6b466094f10c9075fab3fa69e38c107d3e80c"
  },
  "sumi/1": {
   "comps": 58,
@@ -533,7 +533,7 @@
   "exprs": 1848,
   "animators": 230,
   "effects": 263,
-  "hash": "6f0f566432be2499d0b763371ef0d1683414b5c9"
+  "hash": "7c69ec0421808885684ca476ffb1ad85be1fdfbd"
  },
  "sumi/7+": {
   "comps": 58,
@@ -541,7 +541,7 @@
   "exprs": 2170,
   "animators": 226,
   "effects": 230,
-  "hash": "c322b958b9a02b000289ac5b7925419d9931aa57"
+  "hash": "8d60742b633aa5b361f70c572639415fd79e3334"
  },
  "sumi/42+-wa": {
   "comps": 58,
@@ -549,7 +549,7 @@
   "exprs": 2519,
   "animators": 249,
   "effects": 351,
-  "hash": "3255cf709b582606e7e6d0c454803f320384e408"
+  "hash": "7b4ba12dc6fb0ac7336ed775b27ec9ac2da7fe19"
  },
  "gold/1": {
   "comps": 58,
@@ -557,7 +557,7 @@
   "exprs": 2074,
   "animators": 143,
   "effects": 225,
-  "hash": "096cc00c944b285a037502c373fbd9f6dd569b76"
+  "hash": "d19b19d68e2a4cb62b5282b921b44776823c30f6"
  },
  "gold/7+": {
   "comps": 58,
@@ -565,7 +565,7 @@
   "exprs": 2572,
   "animators": 176,
   "effects": 346,
-  "hash": "b58f2b223ede427ff6750f5268b254914e14a350"
+  "hash": "7d1002b3ed8953f96967ef33de9f635f4bf26d45"
  },
  "gold/42+-wa": {
   "comps": 58,
@@ -573,6 +573,6 @@
   "exprs": 2924,
   "animators": 180,
   "effects": 259,
-  "hash": "9ba0b250e9e514060b5b5702d2cf2ed7e233ccef"
+  "hash": "672005d57e2034f34fb2aa0e9e628087bc9a5eb7"
  }
 }
