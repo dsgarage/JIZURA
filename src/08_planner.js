@@ -681,6 +681,7 @@ J.designSize = (aspect) => {
   if (aspect === '1:1') return [1440, 1440];
   if (aspect === '4:5') return [1440, 1800];
   if (aspect === '21:9') return [2520, 1080];
+  if (aspect === '2:1') return [2160, 1080];
   if (aspect === '4:3') return [1440, 1080];
   if (aspect === '3:4') return [1080, 1440];
   return [1920, 1080];

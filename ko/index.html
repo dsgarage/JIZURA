@@ -516,7 +516,7 @@ button.small.primary { padding: 4px 12px; }
         <div class="easy-sec">
           <h3>내보내기</h3>
           <div class="fields">
-            <label class="field">화면비<select id="eAspect"><option value="16:9">16:9</option><option value="9:16">9:16 세로</option><option value="4:3">4:3</option><option value="3:4">3:4 세로</option><option value="1:1">1:1</option><option value="4:5">4:5 세로</option><option value="21:9">21:9</option></select></label>
+            <label class="field">화면비<select id="eAspect"><option value="16:9">16:9</option><option value="9:16">9:16 세로</option><option value="4:3">4:3</option><option value="3:4">3:4 세로</option><option value="1:1">1:1</option><option value="4:5">4:5 세로</option><option value="21:9">21:9</option><option value="2:1">2:1</option></select></label>
             <label class="field">해상도<select id="eRes"><option value="720">720p</option><option value="1080">1080p</option><option value="1440">1440p</option><option value="2160">4K</option></select></label>
             <label class="field">fps<select id="eFps"><option>24</option><option>30</option><option>60</option></select></label>
             <label class="field field-wide">배경<select id="eKey"><option value="off">일반 (스타일 배경)</option><option value="green">그린 스크린 (합성용)</option><option value="black">블랙 배경 (합성용)</option></select></label>
@@ -583,7 +583,7 @@ button.small.primary { padding: 4px 12px; }
 
       <div class="tabpane" data-pane="out" hidden>
         <div class="fields">
-          <label class="field">화면비<select id="outAspect"><option value="16:9">16:9</option><option value="9:16">9:16 세로</option><option value="4:3">4:3</option><option value="3:4">3:4 세로</option><option value="1:1">1:1</option><option value="4:5">4:5 세로</option><option value="21:9">21:9</option></select></label>
+          <label class="field">화면비<select id="outAspect"><option value="16:9">16:9</option><option value="9:16">9:16 세로</option><option value="4:3">4:3</option><option value="3:4">3:4 세로</option><option value="1:1">1:1</option><option value="4:5">4:5 세로</option><option value="21:9">21:9</option><option value="2:1">2:1</option></select></label>
           <label class="field">해상도<select id="outRes"><option value="720">720p</option><option value="1080">1080p</option><option value="1440">1440p</option><option value="2160">4K</option></select></label>
           <label class="field">fps<select id="outFps"><option>24</option><option>30</option><option>60</option></select></label>
           <label class="field">화질<select id="outQuality"><option value="standard">표준</option><option value="high">높음</option><option value="max">최고</option></select></label>
@@ -3819,6 +3819,7 @@ J.designSize = (aspect) => {
   if (aspect === '1:1') return [1440, 1440];
   if (aspect === '4:5') return [1440, 1800];
   if (aspect === '21:9') return [2520, 1080];
+  if (aspect === '2:1') return [2160, 1080];
   if (aspect === '4:3') return [1440, 1080];
   if (aspect === '3:4') return [1080, 1440];
   return [1920, 1080];
