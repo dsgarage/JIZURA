@@ -51,11 +51,13 @@ function jzBuildStart(plan, opt) {
         if (!(cut.end > cut.start)) return;
         cut.dur = cut.end - cut.start;
         var sc = schemeOf(cut), label = jzPad(ci + 1, 3) + ' ' + String(cut.text || cut.layout).substr(0, 16);
+        var CX = jzCutCtx(cut, st, FXV, sc);        // per-cut style / strengths / scheme (cut.ov from the cut editor); none: the same values
+        sc = CX.sc;
         var cdur = Math.max(cut.dur, 1 / fps) + 1.0;
         // content
         var pc = app.project.items.addComp(label + ' text', W, H, 1, cdur, fps);
         pc.parentFolder = folder;
-        var ctx = { comp: pc, W: W, H: H, u: u, sc: sc, st: st, fx: FXV, cut: cut, P: cut.params || {}, roles: roles, plan: plan };
+        var ctx = { comp: pc, W: W, H: H, u: u, sc: sc, st: CX.st, fx: CX.fx, cut: cut, P: cut.params || {}, roles: roles, plan: plan };
         var bb = null, lk = jzFallback('layout', cut.layout, 'center');
         if (lk !== cut.layout) { ctx.P = JZ_REG.layout[lk].plan ? JZ_REG.layout[lk].plan(new JzRng(jzHash(cut.seed, 31)), { text: cut.text, n: jzCount(cut.text), W: W, H: H, dur: cut.dur }, st) : {}; }
         try { bb = JZ_REG.layout[lk].build(ctx); }
@@ -66,7 +68,7 @@ function jzBuildStart(plan, opt) {
         wc.parentFolder = folder;
         var bgL = wc.layers.addSolid(jzHex(sc.bg), 'JZ BG', W, H, 1, cdur);
         if (!KEY) jzBgLift(bgL, sc, W, H);
-        if (paperAmt > 0.05 && FXV.texture > 0.05) {
+        if (paperAmt > 0.05 && CX.fx.texture > 0.05) {
             var pp = wc.layers.addSolid([0.5, 0.5, 0.5], 'JZ Paper', W, H, 1, cdur);
             var pn = jzEffect(pp, 'ADBE Fractal Noise', 'JZ Paper Noise'); jzEP(pn, 4, 60);
             // the browser's paper is a faint fibre texture: keep the overlay light, fainter still on dark schemes
@@ -74,12 +76,12 @@ function jzBuildStart(plan, opt) {
         }
         var bk = !KEY && cut.bg && cut.bg !== 'none' ? jzFallback('bg', cut.bg, null) : null;
         if (bk) {
-            var bctx = { comp: wc, W: W, H: H, u: u, sc: sc, st: st, fx: FXV, cut: cut, plan: plan, P: cut.bgP || {} };
+            var bctx = { comp: wc, W: W, H: H, u: u, sc: sc, st: CX.st, fx: CX.fx, cut: cut, plan: plan, P: cut.bgP || {} };
             try { JZ_REG.bg[bk].build(bctx, bctx.P); } catch (e3) { jzWarn('bg ' + bk + ': ' + e3.toString() + (e3.line ? ' (line ' + e3.line + ')' : '')); }
         }
         var CL = wc.layers.add(pc); CL.name = 'content'; CL.startTime = 0;
         var content = [CL];
-        if (ghostAmt > 0.02 && opt.ghosts !== false) {
+        if (CX.ghostAmt > 0.02 && opt.ghosts !== false) {
             // layers marked with jzNoGhost() stay out of the ghosts: feed them from a copy of the content comp with those layers off
             var gsrc = null, li;
             for (li = 1; li <= pc.numLayers; li++) if (jzIsNoGhost(pc.layer(li))) { gsrc = pc; break; }
@@ -100,7 +102,7 @@ function jzBuildStart(plan, opt) {
                 if (jzLum(sc.bg) > 0.55) G.blendingMode = BlendingMode.MULTIPLY;
                 var off = ghosts[g][2];
                 jzSetExpr(jzXf(G, 'ADBE Position'), 'var T0=' + jzN(cut.start) + ',ev=' + jzEventsArr(plan, 'chroma', cut.start, cut.end) + ';var s=1;for(var i=0;i<ev.length;i++){var dt=(time+T0-ev[i][0])*24;if(dt>=0&&dt<14)s+=ev[i][1]*Math.pow(0.55,dt);}' +
-                    'var k=' + jzN(ghostAmt * u) + '*s;[value[0]+' + off[0] + '*k,value[1]+' + off[1] + '*k]');
+                    'var k=' + jzN(CX.ghostAmt * u) + '*s;[value[0]+' + off[0] + '*k,value[1]+' + off[1] + '*k]');
                 content.push(G);
             }
         }
@@ -109,7 +111,7 @@ function jzBuildStart(plan, opt) {
         jzXf(nul, 'ADBE Anchor Point').setValue([W / 2, H / 2]); jzXf(nul, 'ADBE Position').setValue([W / 2, H / 2]);
         for (var q = 0; q < content.length; q++) content[q].parent = nul;
         var ck = jzFallback('cam', cut.cam || 'push', 'push');
-        try { JZ_REG.cam[ck].apply({ ctx: ctx, comp: wc, nul: nul, content: content, P: cut.camP || {}, W: W, H: H, u: u, cut: cut, fx: FXV, sc: sc }, cut.camP || {}); }
+        try { JZ_REG.cam[ck].apply({ ctx: ctx, comp: wc, nul: nul, content: content, P: cut.camP || {}, W: W, H: H, u: u, cut: cut, fx: CX.fx, sc: sc }, cut.camP || {}); }
         catch (e4) { jzWarn('cam ' + ck + ': ' + e4.toString() + (e4.line ? ' (line ' + e4.line + ')' : '')); }
         // into the main comp
         var WL = comp.layers.add(wc);

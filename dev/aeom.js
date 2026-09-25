@@ -379,7 +379,7 @@ class Layer extends Prop {
     this.name = (o && o.name) || kind; this._startTime = 0; this._in = 0; this._out = comp.duration; this._parent = null;
     this.blendingMode = BlendingMode.NORMAL; this.adjustmentLayer = false; this.trackMatteType = TrackMatteType.NO_TRACK_MATTE; this.enabled = true;
     this.shy = false; this.locked = false; this.solo = false; this.motionBlur = false; this.guideLayer = false; this.label = 0; this.nullLayer = kind === 'Null'; this.threeDLayer = false;
-    this.timeRemapEnabledFlag = false; this.stretch = 100; this.comment = '';
+    this.timeRemapEnabledFlag = false; this.stretch = 100; this.comment = ''; this.selected = false;
     this.source = (o && o.source) || null;
     const tr = this.property('ADBE Transform Group');
     ['ADBE Anchor Point', 'ADBE Position', 'ADBE Scale', 'ADBE Rotate Z', 'ADBE Opacity'].forEach(m => tr.property(m));
@@ -485,8 +485,8 @@ class Comp {
     if (!(w >= 4 && h >= 4 && w <= 30000 && h <= 30000 && d > 0 && fps > 0)) throw new Error(`bad comp ${name} ${w}x${h} d=${d} fps=${fps}`);
     if (Math.round(w) !== w || Math.round(h) !== h) env.stats.problems.push(`comp size must be integers: ${w}x${h}`);
     this.env = env; this.name = name; this.width = w; this.height = h; this.pixelAspect = pa; this.duration = d; this.frameRate = fps; this._layers = []; env.stats.comps++;
-    this.bgColor = [0, 0, 0]; this.workAreaStart = 0; this.workAreaDuration = d; this.parentFolder = null; this.typeName = 'Composition';
-    this.id = env.nextId = (env.nextId || 0) + 1; this.selectedLayers = [];
+    this.bgColor = [0, 0, 0]; this.workAreaStart = 0; this.workAreaDuration = d; this.parentFolder = null; this.typeName = 'Composition'; this.comment = ''; this.time = 0;
+    this.id = env.nextId = (env.nextId || 0) + 1;
     const self = this;
     const add = (L) => { self._layers.unshift(L); return L; };
     this.layers = {
@@ -509,6 +509,9 @@ class Comp {
     this.markerProperty = new Prop('ADBE Marker', null, env);
   }
   get numLayers() { return this._layers.length; }
+  // like AE: the selection is the layers whose selected flag is on
+  get selectedLayers() { return this._layers.filter(L => L.selected); }
+  set selectedLayers(a) { this._layers.forEach(L => { L.selected = a.indexOf(L) >= 0; }); }
   get frameDuration() { return 1 / this.frameRate; }
   layer(i) { return typeof i === 'number' ? this._layers[i - 1] : this._layers.find(l => l.name === i); }
   // like AE's CompItem.duplicate(): same layers (properties, expressions, parenting, switches), new comp
@@ -525,7 +528,17 @@ class Comp {
     for (const L of this._layers) if (L._parent) map.get(L)._parent = map.get(L._parent) || null;
     return c;
   }
-  openInViewer() {}
+  openInViewer() { this.env.app.project.activeItem = this; }      // like AE: the comp becomes the active item
+  // comps that have a layer of this comp (AVItem.usedIn)
+  get usedIn() { return this.env.app.project._items().filter(c => c instanceof Comp && c._layers.some(L => L.source === this)); }
+  remove() { this.env.app.project._remove(this); }
+}
+class Folder {
+  constructor(env, name) { this.env = env; this.name = name; this.typeName = 'Folder'; this.comment = ''; this.parentFolder = null; this.id = env.nextId = (env.nextId || 0) + 1; }
+  get numItems() { return this.env.app.project._items().filter(i => i.parentFolder === this).length; }
+  item(i) { return this.env.app.project._items().filter(x => x.parentFolder === this)[i - 1]; }
+  // AE removes a folder with everything in it
+  remove() { const P = this.env.app.project; P._items().filter(i => i.parentFolder === this).forEach(i => i.remove ? i.remove() : P._remove(i)); P._remove(this); }
 }
 function makeEnv(opts) {
   opts = opts || {};
@@ -534,12 +547,16 @@ function makeEnv(opts) {
   const project = {
     items: {
       addComp(...a) { const c = new Comp(env, ...a); env.comps.push(c); items.push(c); return c; },
-      addFolder(n) { const f = { name: n, typeName: 'Folder', items: [] }; items.push(f); return f; },
+      addFolder(n) { const f = new Folder(env, n); items.push(f); return f; },
       get length() { return items.length; },
     },
     // test hook (not AE API): an imported audio file
     _addFootage(o) { const f = { name: o.name, id: env.nextId = (env.nextId || 0) + 1, file: { fsName: o.path, name: o.name }, duration: o.duration || 10, hasAudio: true, audioOnly: true, width: 0, height: 0, typeName: 'Footage', parentFolder: null }; items.push(f); return f; },
     item(i) { return items[i - 1]; },
+    // test hooks (not AE API)
+    _items() { return items.slice(); },
+    _remove(it) { const i = items.indexOf(it); if (i >= 0) items.splice(i, 1); it._removed = true; if (project.activeItem === it) project.activeItem = null; },
+    rootFolder: { name: 'root', typeName: 'Folder' },
     get numItems() { return items.length; },
     activeItem: null, bitsPerChannel: 8,
   };
@@ -553,11 +570,11 @@ function makeEnv(opts) {
   const ctx = {
     app, Shape, TextDocument, KeyframeEase, BlendingMode, TrackMatteType, KeyframeInterpolationType, ParagraphJustification, MaskMode, PropertyType,
     alert: (m) => { ctx.__alerts.push(String(m)); }, __alerts: [], $: { writeln() {}, sleep() {} },
-    Panel: class {}, Window: class {}, CompItem: Comp, FolderItem: Object, File: function () {}, Folder: function () {}, ScriptUI: {},
+    Panel: class {}, Window: class {}, CompItem: Comp, FolderItem: Folder, File: function () {}, Folder: function () {}, ScriptUI: {},
     JSON, Math, Date, String, Number, Array, Object, RegExp, Error, parseInt, parseFloat, isFinite, isNaN, encodeURIComponent, decodeURIComponent,
   };
   env.ctx = ctx; env.app = app;
   return env;
 }
-return { makeEnv, EFFECTS, DEFAULTS, GROUPS, INDEXED, Shape, TextDocument, Layer, Comp, Prop, BlendingMode, TrackMatteType, KeyframeInterpolationType, ParagraphJustification, MaskMode };
+return { makeEnv, Folder, EFFECTS, DEFAULTS, GROUPS, INDEXED, Shape, TextDocument, Layer, Comp, Prop, BlendingMode, TrackMatteType, KeyframeInterpolationType, ParagraphJustification, MaskMode };
 });

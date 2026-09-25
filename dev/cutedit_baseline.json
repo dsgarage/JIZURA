@@ -1,0 +1,578 @@
+{
+ "noir/1": {
+  "comps": 57,
+  "layers": 617,
+  "exprs": 1892,
+  "animators": 144,
+  "effects": 175,
+  "hash": "7791591cbe3c2f1e860f7feb864691d8c6f95c86"
+ },
+ "noir/7+": {
+  "comps": 59,
+  "layers": 835,
+  "exprs": 2324,
+  "animators": 163,
+  "effects": 249,
+  "hash": "cc95817398aced8830153fc3945b61597e7521a1"
+ },
+ "noir/42+-wa": {
+  "comps": 59,
+  "layers": 725,
+  "exprs": 3232,
+  "animators": 167,
+  "effects": 191,
+  "hash": "a0f398605da98c860d83cbb84b545c3579e28c90"
+ },
+ "crimson/1": {
+  "comps": 57,
+  "layers": 586,
+  "exprs": 1751,
+  "animators": 184,
+  "effects": 197,
+  "hash": "2115964b920d79e99d8667f86c5f95ffe8fe219f"
+ },
+ "crimson/7+": {
+  "comps": 58,
+  "layers": 650,
+  "exprs": 2522,
+  "animators": 192,
+  "effects": 249,
+  "hash": "a37bd6eb1a546f865bb3aeda4aab419f2a6c7e8c"
+ },
+ "crimson/42+-wa": {
+  "comps": 60,
+  "layers": 797,
+  "exprs": 2714,
+  "animators": 178,
+  "effects": 243,
+  "hash": "9a629357756211770db1750b7e7ad1232efb016a"
+ },
+ "caution/1": {
+  "comps": 57,
+  "layers": 631,
+  "exprs": 1755,
+  "animators": 191,
+  "effects": 188,
+  "hash": "0fd54d92c22b4dec0611604a268e1c14bd83a91f"
+ },
+ "caution/7+": {
+  "comps": 58,
+  "layers": 846,
+  "exprs": 1985,
+  "animators": 152,
+  "effects": 331,
+  "hash": "9db8cd3156315cb9735d5a2cf19e79b21d2d375a"
+ },
+ "caution/42+-wa": {
+  "comps": 59,
+  "layers": 827,
+  "exprs": 3240,
+  "animators": 208,
+  "effects": 239,
+  "hash": "0c14e911f48545aa5f30131e2c17c5fa7afdf49e"
+ },
+ "magenta/1": {
+  "comps": 57,
+  "layers": 626,
+  "exprs": 2065,
+  "animators": 153,
+  "effects": 198,
+  "hash": "e07f8d263417ae79746bd019303d527192d8dff3"
+ },
+ "magenta/7+": {
+  "comps": 59,
+  "layers": 712,
+  "exprs": 2068,
+  "animators": 138,
+  "effects": 257,
+  "hash": "e09b9e845eb165300d5d11af9d963236287a5064"
+ },
+ "magenta/42+-wa": {
+  "comps": 59,
+  "layers": 718,
+  "exprs": 3102,
+  "animators": 225,
+  "effects": 210,
+  "hash": "b9d5993fbd2ae7f549554016ec47f9f6141203c7"
+ },
+ "paper/1": {
+  "comps": 57,
+  "layers": 629,
+  "exprs": 1930,
+  "animators": 158,
+  "effects": 215,
+  "hash": "83848365720af78ad9d2ecc9d4a1943cb94d2bea"
+ },
+ "paper/7+": {
+  "comps": 59,
+  "layers": 893,
+  "exprs": 2301,
+  "animators": 151,
+  "effects": 263,
+  "hash": "252e1fe34e20e62217b67307ca9ec338d88436cd"
+ },
+ "paper/42+-wa": {
+  "comps": 58,
+  "layers": 765,
+  "exprs": 2674,
+  "animators": 198,
+  "effects": 239,
+  "hash": "e5a40385e1f6f1d309fb5c75c8d48ddabcdee1fe"
+ },
+ "hud/1": {
+  "comps": 57,
+  "layers": 657,
+  "exprs": 2034,
+  "animators": 193,
+  "effects": 172,
+  "hash": "5390346eda17f0bca47f9f0ee32c10fa0aeea39d"
+ },
+ "hud/7+": {
+  "comps": 58,
+  "layers": 838,
+  "exprs": 2144,
+  "animators": 212,
+  "effects": 313,
+  "hash": "e8f55a06faa5c896020c2baf6cde41205692d9fa"
+ },
+ "hud/42+-wa": {
+  "comps": 59,
+  "layers": 819,
+  "exprs": 2712,
+  "animators": 233,
+  "effects": 208,
+  "hash": "6acc79099145504e5b9ecedb66a7d041f37276e9"
+ },
+ "mint/1": {
+  "comps": 58,
+  "layers": 656,
+  "exprs": 1938,
+  "animators": 160,
+  "effects": 198,
+  "hash": "467b90d915c47df004066b97ab0730f3e00e2db6"
+ },
+ "mint/7+": {
+  "comps": 59,
+  "layers": 804,
+  "exprs": 2091,
+  "animators": 205,
+  "effects": 249,
+  "hash": "f7df70e1424c7cd883a5a07030450a428d149cde"
+ },
+ "mint/42+-wa": {
+  "comps": 60,
+  "layers": 877,
+  "exprs": 3018,
+  "animators": 231,
+  "effects": 276,
+  "hash": "052038656d015155dfccea84e089cbb10eb70888"
+ },
+ "specimen/1": {
+  "comps": 57,
+  "layers": 626,
+  "exprs": 1739,
+  "animators": 133,
+  "effects": 211,
+  "hash": "1f0a3fe51a490e08ce6bfb7ad5d07a9e3fa48f9b"
+ },
+ "specimen/7+": {
+  "comps": 59,
+  "layers": 874,
+  "exprs": 2268,
+  "animators": 149,
+  "effects": 258,
+  "hash": "4fd4b0610c4da6450174441b68c8fb489c0b2bf3"
+ },
+ "specimen/42+-wa": {
+  "comps": 58,
+  "layers": 724,
+  "exprs": 3286,
+  "animators": 123,
+  "effects": 255,
+  "hash": "c7bb9674ab41deb830af1166723645026f79b84e"
+ },
+ "transit/1": {
+  "comps": 57,
+  "layers": 634,
+  "exprs": 1871,
+  "animators": 147,
+  "effects": 256,
+  "hash": "b825f4d551de78ec0b34850a9c8d538ffb22779c"
+ },
+ "transit/7+": {
+  "comps": 58,
+  "layers": 776,
+  "exprs": 2029,
+  "animators": 140,
+  "effects": 279,
+  "hash": "ab54320697f9a533b1730a9bd2dd430da103b700"
+ },
+ "transit/42+-wa": {
+  "comps": 59,
+  "layers": 774,
+  "exprs": 2819,
+  "animators": 180,
+  "effects": 263,
+  "hash": "ba87fed323f2f8da5ddf67295ca13bce36d42965"
+ },
+ "blueprint/1": {
+  "comps": 58,
+  "layers": 620,
+  "exprs": 1714,
+  "animators": 207,
+  "effects": 180,
+  "hash": "555c862b6f5dc76f94bee96e35241b77fc76ebdc"
+ },
+ "blueprint/7+": {
+  "comps": 59,
+  "layers": 761,
+  "exprs": 2443,
+  "animators": 189,
+  "effects": 302,
+  "hash": "e0b099574bc46eab421f4aa91d4bc95bd684dfb5"
+ },
+ "blueprint/42+-wa": {
+  "comps": 59,
+  "layers": 771,
+  "exprs": 3366,
+  "animators": 187,
+  "effects": 213,
+  "hash": "eafd8e64f33ffa1a372de9671602a103be8cde25"
+ },
+ "rouge/1": {
+  "comps": 57,
+  "layers": 671,
+  "exprs": 1957,
+  "animators": 151,
+  "effects": 217,
+  "hash": "caebb63b3b9a51e7ab8773e90ec4ff20a2a53121"
+ },
+ "rouge/7+": {
+  "comps": 59,
+  "layers": 837,
+  "exprs": 2147,
+  "animators": 217,
+  "effects": 250,
+  "hash": "13fb242e7ea76ff301f338a3ff718eba68cfe353"
+ },
+ "rouge/42+-wa": {
+  "comps": 59,
+  "layers": 781,
+  "exprs": 3228,
+  "animators": 118,
+  "effects": 242,
+  "hash": "ba5691801cb1c97284f8bf62a57b8719af69ec33"
+ },
+ "mono/1": {
+  "comps": 57,
+  "layers": 647,
+  "exprs": 2066,
+  "animators": 189,
+  "effects": 193,
+  "hash": "d30862f518ce1f7bdeda994a3d378b6d90677a1f"
+ },
+ "mono/7+": {
+  "comps": 58,
+  "layers": 792,
+  "exprs": 1996,
+  "animators": 152,
+  "effects": 301,
+  "hash": "c63fc0d8c7e2ceb03b893ae0a16c9dbef36e8664"
+ },
+ "mono/42+-wa": {
+  "comps": 58,
+  "layers": 760,
+  "exprs": 3274,
+  "animators": 168,
+  "effects": 198,
+  "hash": "eb0873c66a1d093b98573f689ce56fc135735a65"
+ },
+ "sakura/1": {
+  "comps": 58,
+  "layers": 617,
+  "exprs": 2239,
+  "animators": 278,
+  "effects": 264,
+  "hash": "69d935cb5c357ff0b5308a40375a91544bb8bf33"
+ },
+ "sakura/7+": {
+  "comps": 58,
+  "layers": 854,
+  "exprs": 1902,
+  "animators": 166,
+  "effects": 322,
+  "hash": "6ecf196de83b5075e4006efdac44b91b2adc04e3"
+ },
+ "sakura/42+-wa": {
+  "comps": 59,
+  "layers": 786,
+  "exprs": 3021,
+  "animators": 183,
+  "effects": 250,
+  "hash": "23f7c546ead27b20312c8236b96664dfdf5b7487"
+ },
+ "ocean/1": {
+  "comps": 58,
+  "layers": 644,
+  "exprs": 3003,
+  "animators": 222,
+  "effects": 247,
+  "hash": "579c2b79511587d26978f77e51e35e2eea87b7c3"
+ },
+ "ocean/7+": {
+  "comps": 58,
+  "layers": 763,
+  "exprs": 2001,
+  "animators": 154,
+  "effects": 270,
+  "hash": "b70435e756076d0a4ca092fbaef5dd3cf94d5777"
+ },
+ "ocean/42+-wa": {
+  "comps": 59,
+  "layers": 751,
+  "exprs": 3055,
+  "animators": 206,
+  "effects": 248,
+  "hash": "3c8da8638edae5d1fd6bfee9b9ac7195e5133eae"
+ },
+ "sunset/1": {
+  "comps": 58,
+  "layers": 750,
+  "exprs": 1937,
+  "animators": 179,
+  "effects": 234,
+  "hash": "ffaa20581a70b543e275c4408845fadabba69a0f"
+ },
+ "sunset/7+": {
+  "comps": 58,
+  "layers": 730,
+  "exprs": 2148,
+  "animators": 159,
+  "effects": 263,
+  "hash": "f2bcc3d92fb08057fbdc84d1ef4f5bf8f3e4ba88"
+ },
+ "sunset/42+-wa": {
+  "comps": 58,
+  "layers": 689,
+  "exprs": 3226,
+  "animators": 179,
+  "effects": 228,
+  "hash": "6da10bf8f12df4d7ea209bdbd91124004a454b34"
+ },
+ "forest/1": {
+  "comps": 58,
+  "layers": 633,
+  "exprs": 2097,
+  "animators": 240,
+  "effects": 200,
+  "hash": "bee34a6f109242672452e8f48effbc678ca431ef"
+ },
+ "forest/7+": {
+  "comps": 58,
+  "layers": 821,
+  "exprs": 2733,
+  "animators": 384,
+  "effects": 193,
+  "hash": "7376e9f30911cae5bb2bc251bb7989580e054a3e"
+ },
+ "forest/42+-wa": {
+  "comps": 59,
+  "layers": 756,
+  "exprs": 2776,
+  "animators": 159,
+  "effects": 252,
+  "hash": "3986e1ad90ef783a9558fb2d9f5592a71eca5afe"
+ },
+ "vapor/1": {
+  "comps": 58,
+  "layers": 566,
+  "exprs": 1969,
+  "animators": 138,
+  "effects": 224,
+  "hash": "f170dd1f2e8f68215621b04d45b7ed3c4f9d371c"
+ },
+ "vapor/7+": {
+  "comps": 59,
+  "layers": 679,
+  "exprs": 1627,
+  "animators": 174,
+  "effects": 238,
+  "hash": "6cf571e16e07e80dd66729d4b2c7684be18586f2"
+ },
+ "vapor/42+-wa": {
+  "comps": 59,
+  "layers": 700,
+  "exprs": 2041,
+  "animators": 136,
+  "effects": 258,
+  "hash": "453217921b3241ec6697c97317029d81358447c9"
+ },
+ "newsprint/1": {
+  "comps": 58,
+  "layers": 666,
+  "exprs": 1551,
+  "animators": 188,
+  "effects": 220,
+  "hash": "583e2fb6e343e09bbb32668656b278929cf9a606"
+ },
+ "newsprint/7+": {
+  "comps": 58,
+  "layers": 756,
+  "exprs": 2299,
+  "animators": 145,
+  "effects": 287,
+  "hash": "348d2acc31b27a82d43201d2db1599fd0a77822f"
+ },
+ "newsprint/42+-wa": {
+  "comps": 58,
+  "layers": 784,
+  "exprs": 2476,
+  "animators": 196,
+  "effects": 247,
+  "hash": "28a296bc6aa862f71746631fb958a20889137661"
+ },
+ "synth80/1": {
+  "comps": 58,
+  "layers": 698,
+  "exprs": 2314,
+  "animators": 217,
+  "effects": 277,
+  "hash": "d95ac110b3b35c387bbf178b03119675928cb193"
+ },
+ "synth80/7+": {
+  "comps": 58,
+  "layers": 646,
+  "exprs": 1954,
+  "animators": 196,
+  "effects": 223,
+  "hash": "f18e6c9731de89ad2491aec44cb0cb7c2e17fd85"
+ },
+ "synth80/42+-wa": {
+  "comps": 58,
+  "layers": 850,
+  "exprs": 2429,
+  "animators": 213,
+  "effects": 266,
+  "hash": "8e724391972cb034f60f80dab3c2fa54b94b6597"
+ },
+ "kraft/1": {
+  "comps": 58,
+  "layers": 680,
+  "exprs": 2095,
+  "animators": 267,
+  "effects": 227,
+  "hash": "714047e55fad5d36fe08df4bc74f76942c978ca8"
+ },
+ "kraft/7+": {
+  "comps": 58,
+  "layers": 793,
+  "exprs": 2299,
+  "animators": 193,
+  "effects": 299,
+  "hash": "2498beb3c2a74a75e1d5a9a7063627e9fdf1f1a9"
+ },
+ "kraft/42+-wa": {
+  "comps": 59,
+  "layers": 864,
+  "exprs": 2646,
+  "animators": 230,
+  "effects": 264,
+  "hash": "78ce5d788d7e0128d0a721e969a55c6bd1ff6596"
+ },
+ "candy/1": {
+  "comps": 58,
+  "layers": 637,
+  "exprs": 2633,
+  "animators": 106,
+  "effects": 216,
+  "hash": "8af76a753e31ee02a172021718dbbdc01033c394"
+ },
+ "candy/7+": {
+  "comps": 58,
+  "layers": 761,
+  "exprs": 2468,
+  "animators": 156,
+  "effects": 283,
+  "hash": "8544ef44fb417c8eac58ac49fed00c12bc31c238"
+ },
+ "candy/42+-wa": {
+  "comps": 59,
+  "layers": 774,
+  "exprs": 2538,
+  "animators": 128,
+  "effects": 246,
+  "hash": "4e409624a7fada03a079a297e14ce60fbad069f5"
+ },
+ "acid/1": {
+  "comps": 58,
+  "layers": 626,
+  "exprs": 2161,
+  "animators": 189,
+  "effects": 199,
+  "hash": "1e1be329f37b4b19ac9c18511914905e035482d2"
+ },
+ "acid/7+": {
+  "comps": 58,
+  "layers": 782,
+  "exprs": 2830,
+  "animators": 229,
+  "effects": 275,
+  "hash": "2094b92fb23fa3f77881987d6ecf0459e6347891"
+ },
+ "acid/42+-wa": {
+  "comps": 58,
+  "layers": 729,
+  "exprs": 2420,
+  "animators": 163,
+  "effects": 245,
+  "hash": "7cd719f900a4f15649dee5ddd6de30a83d8d89c6"
+ },
+ "sumi/1": {
+  "comps": 58,
+  "layers": 693,
+  "exprs": 1848,
+  "animators": 230,
+  "effects": 263,
+  "hash": "6f0f566432be2499d0b763371ef0d1683414b5c9"
+ },
+ "sumi/7+": {
+  "comps": 58,
+  "layers": 810,
+  "exprs": 2170,
+  "animators": 226,
+  "effects": 230,
+  "hash": "c322b958b9a02b000289ac5b7925419d9931aa57"
+ },
+ "sumi/42+-wa": {
+  "comps": 58,
+  "layers": 901,
+  "exprs": 2519,
+  "animators": 249,
+  "effects": 351,
+  "hash": "3255cf709b582606e7e6d0c454803f320384e408"
+ },
+ "gold/1": {
+  "comps": 58,
+  "layers": 788,
+  "exprs": 2074,
+  "animators": 143,
+  "effects": 225,
+  "hash": "096cc00c944b285a037502c373fbd9f6dd569b76"
+ },
+ "gold/7+": {
+  "comps": 58,
+  "layers": 861,
+  "exprs": 2572,
+  "animators": 176,
+  "effects": 346,
+  "hash": "b58f2b223ede427ff6750f5268b254914e14a350"
+ },
+ "gold/42+-wa": {
+  "comps": 58,
+  "layers": 775,
+  "exprs": 2924,
+  "animators": 180,
+  "effects": 259,
+  "hash": "9ba0b250e9e514060b5b5702d2cf2ed7e233ccef"
+ }
+}

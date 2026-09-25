@@ -75,6 +75,7 @@ var JZCEP = (function () {
     }
     function result(C, cancelled) {
         var comp = job.comp, log = C.log() || [], notes = [];
+        if (C.cutEdit) { app.beginUndoGroup('JIZURA'); try { var ce = C.cutEdit.stamp(comp, jobPlan); if (!ce.ok) log.push('カット編集: ' + ce.error); } catch (ec) { log.push('カット編集: ' + ec.toString()); } finally { app.endUndoGroup(); } }   // the plan into the comments (cut editor)
         for (var i = 0; i < log.length && i < 20; i++) notes.push(String(log[i]));
         lastComp = comp; lastPlan = jobPlan;
         return { ok: true, done: true, cancelled: cancelled, name: comp.name, cuts: job.done, total: job.total, secs: (new Date().getTime() - jobT0) / 1000,
