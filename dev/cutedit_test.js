@@ -350,8 +350,15 @@ const readJ = (JZ, v) => JSON.parse(JZ.JZ_CUTEDIT.json(v));
     const list = h.h.cuts.map(u => cs.cuts.find(x => x.uid === u)).map(x => ({ base: x.cut.base, edit: x.uid === s.uid ? { layout: 'vcols', decor: ['rings', null, null] } : {}, ev: x.cut.ev }));
     const plan2 = CE.buildPlan(h.h, list, null);
     vfs['/tmp/p.json'] = JSON.stringify(plan2);
+    // the viewer: a tiny temporary comp while rebuilding (the old comp was on show), the new comp afterwards
+    const P0 = env.app.project, tmpOn = () => P0.activeItem && /^JZ rebuild/.test(P0.activeItem.name), tmpLeft = () => P0._items().filter(i => /^JZ rebuild/.test(i.name)).length;
+    P0.activeItem = old;
     r = call('JZCEP.rebuildStartFromFile("/tmp/p.json",' + s.compId + ',"%7B%7D")');
-    let guard = 0; while (r.ok && !r.done && guard++ < 500) r = call('JZCEP.rebuildStep(50)');
+    let viewerOk = tmpOn(), guard = 0;
+    while (r.ok && !r.done && guard++ < 500) { r = call('JZCEP.rebuildStep(50)'); if (!r.done && !tmpOn()) viewerOk = false; }
+    if (!viewerOk) errs.push('viewer did not show the temporary comp while rebuilding');
+    if (tmpLeft()) errs.push('temporary comp left');
+    if (!r.done || !P0.activeItem || P0.activeItem.id !== r.compId) errs.push('viewer not on the new comp afterwards');
     if (!r.ok || !r.done || r.cancelled) errs.push('rebuild ' + JSON.stringify(r).slice(0, 200));
     else {
       const items = env.app.project._items(), mains = items.filter(i => /^JIZURA /.test(i.name) && i instanceof AEOM.Comp);
@@ -367,21 +374,25 @@ const readJ = (JZ, v) => JSON.parse(JZ.JZ_CUTEDIT.json(v));
       if (r.compId !== nw.id || r.replaced !== true) errs.push('result ' + JSON.stringify([r.compId, nw.id, r.replaced]));
       // cancel: the old comp stays, the half-built one goes
       vfs['/tmp/p2.json'] = JSON.stringify(plan2);
+      const song = env.app.project.items.addComp('Song', 1920, 1080, 1, 10, 24); song.openInViewer();
       r = call('JZCEP.rebuildStartFromFile("/tmp/p2.json",' + nw.id + ',"%7B%7D")');
       call('JZCEP.rebuildStep(1)'); call('JZCEP.rebuildCancel()');
       guard = 0; do { r = call('JZCEP.rebuildStep(50)'); } while (r.ok && !r.done && guard++ < 500);
       const mains2 = env.app.project._items().filter(i => i instanceof AEOM.Comp && /^JIZURA /.test(i.name));
       if (!r.cancelled || mains2.length !== 1 || mains2[0] !== nw) errs.push('cancel ' + JSON.stringify(r).slice(0, 120) + ' mains ' + mains2.length);
       if (env.app.project._items().filter(i => i instanceof AEOM.Folder).length !== 1) errs.push('cancel left a folder');
+      if (tmpLeft() || P0.activeItem !== song) errs.push('cancel: viewer not back on the comp that was shown (or temporary comp left)');
+      nw.openInViewer();
       // keep the old comp: renamed "(old)"
       vfs['/tmp/p3.json'] = JSON.stringify(plan2);
       r = call('JZCEP.rebuildStartFromFile("/tmp/p3.json",' + nw.id + ',' + JSON.stringify(encodeURIComponent('{"keepOld":true}')) + ')');
       guard = 0; while (r.ok && !r.done && guard++ < 500) r = call('JZCEP.rebuildStep(50)');
       const names = env.app.project._items().filter(i => i instanceof AEOM.Comp && /^JIZURA /.test(i.name)).map(c => c.name);
       if (!r.keptOld || !names.includes(oldName) || !names.includes(oldName + ' (old)')) errs.push('keepOld ' + names.join(', '));
+      if (tmpLeft() || !P0.activeItem || P0.activeItem.id !== r.compId) errs.push('keepOld: viewer not on the new comp');
     }
   }
-  check('T-9a host の作り直し（選択 → 読み出し → 編集 → rebuildStart/Step → 旧コンポ置換・曲の引き継ぎ・中止・残す）', !errs.length, errs.join('; '));
+  check('T-9a host の作り直し（選択 → 読み出し → 編集 → rebuildStart/Step → 旧コンポ置換・曲の引き継ぎ・中止・残す・作り直し中のビューア）', !errs.length, errs.join('; '));
 }
 
 console.log(`\n${results.length - failed} / ${results.length} passed`);
