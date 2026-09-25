@@ -114,6 +114,16 @@ async def main():
         await pg.click('.ce-readback')
         t = await pg.evaluate("() => J.ui.project.title")
         check('読み戻す → パネルのプロジェクトがコンポの構成になる', t != 'ちがう題', t)
+        # stage 2: replace only the selected cut (cut 5 is selected from the list above)
+        before = await pg.evaluate("""() => { const c = __H.env.app.project.activeItem; return { main: c.id, others: c._layers.filter(L => L.source && /"k":"cut"/.test(L.source.comment || '') && !/^005 /.test(L.name) && !/^JZ Trans /.test(L.name)).map(L => L.source.id).sort() }; }""")
+        await pg.select_option('[data-pane=cut] select[data-g=layout]', 'stack')
+        await pg.click('.ce-replace')
+        await pg.wait_for_function("() => /差し替えました|差し替えられませんでした/.test(document.querySelector('.ce-status').textContent)", timeout=120000)
+        after = await pg.evaluate("""() => { const c = __H.env.app.project.activeItem, L5 = c._layers.find(L => /^005 /.test(L.name));
+            return { status: document.querySelector('.ce-status').textContent, main: c.id, others: c._layers.filter(L => L.source && /"k":"cut"/.test(L.source.comment || '') && !/^005 /.test(L.name) && !/^JZ Trans /.test(L.name)).map(L => L.source.id).sort(),
+                     edit: JSON.parse(L5.source.comment.slice(4)).edit, sel: J.cutEdit.state.sel && J.cutEdit.state.cuts.get(J.cutEdit.state.sel).i }; }""")
+        check('このカットだけ差し替える → メインコンポはそのまま、他のカットの wrapper は同じ、カット 5 の edit', '差し替えました' in after['status'] and after['main'] == before['main'] and after['others'] == before['others'] and after['edit'].get('layout') == 'stack' and after['sel'] == 4,
+              f"{after['status'][:60]} / edit {after['edit']} / sel {after['sel']}")
         herr = await pg.evaluate('() => __H.errors')
         check('host / page のエラーが無い', not herr and not errs, (herr[:3], errs[:3]))
         await b.close()

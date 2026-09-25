@@ -465,6 +465,15 @@ jzBuildEnvFor(comp, folder, plan, opt)  … 段階 2 の差し替え用。既存
 - 境界 (i, i+1): 次カットの wrapper レイヤー `WLn` に付いている `JZ Trans` エフェクト（`property('ADBE Effect Parade')` の名前が `JZ Trans` で始まるもの）を削除し、`JZ Trans ` レイヤーで `inPoint` が `next.start ± 0.06` のものを削除。`next.trans` があれば `jzBuildTrans(B, wrapNew, wrapNext)`
 - 前後のレイヤーがユーザーに削除されている・見つからないときは、その境界のつなぎは作らない（警告）
 
+### 7.3.1 実装（0.2 で追記）
+
+- 入口: `JZCEP.replaceCutFromFile(path)` / `replaceCutFromString(enc)`（`cep/host_cutedit.jsx`）。一時ファイルは `{compId, plan, ci, uids, layerId, layerIndex}`。`plan` は作り直しと同じ `buildPlan` の出力（共通設定は反映しない。共通設定の変更は「作り直す（コンポ全体）」で反映する旨を表示）。`uids` は plan.cuts と並ぶカットの uid で、前後のレイヤーを探すのに使う。Undo グループは 1 つ（'JIZURA カット編集: カット差し替え'、Cmd+Z 1 回で戻る）。ジョブ方式にはしていない（1 カット分なので短い）
+- 本体: `JZ_CUTEDIT.replace`（`jzCEReplace`）。`E = jzBuildEnv(plan, {roles}, main, folder)` → `jzBuildCut(E, cut, ci)` → `moveBefore(旧レイヤー)`、label / shy / parent を写す → 境界の掃除 → 旧レイヤー削除 → `jzBuildTrans` で前後のつなぎ → 旧 wrapper ツリーを `removeTree`（ほかのレイヤーが使っていれば残す）→ `jzTidyTree(新 wrapper)` → 新 wrapper に stamp（`base` / `edit` は送られた値のまま＝§11-8 (b)、uid は新しく振る）→ ヘッダの `cuts[]` の旧 uid を新 uid に置き換えて書き直す
+- 境界の掃除の規則（`p_trans.jsx` の実装から）: つなぎが作るレイヤーはすべて名前が `JZ Trans ` で始まり、`[t0, t0 + td]`（`td ≤ 0.6 × 新しいカットの長さ`）にある。そこで境界 t のレイヤーは「名前が `JZ Trans ` で始まり、`inPoint` が `(t - 0.06, t + max(0.1, 0.6 × dur) + 0.02)` にあるもの」を消す（blockDissolve などは t より少し後から始まるレイヤーを作るので、±0.06 秒では足りなかった）。前のカットの wrapper レイヤーからは `JZ Trans out …`（つなぎの A 側に付くエフェクト）だけを、次のカットの wrapper レイヤーからは `JZ Trans out` 以外の `JZ Trans …`（B 側）を消す
+- つなぎの複製レイヤー（`tn_copy` が作る `JZ Trans … (prev cut)` など）は wrapper コンポを source に持つ。`jzCEWrappers` は名前が `JZ Trans ` のレイヤーを除外する（段階 1 の cutRead / 選択でも同じ。これが無いと複製をカットのレイヤーと取り違える）
+- 前後のレイヤーの `sc` は `jzCutCtx(前後の cut, …).sc`（前後のカットのカット単位の色も反映）。前後のレイヤーが見つからないときはその境界のつなぎを作らず notes に書く
+- パネル: カットを選んでいるとき「このカットだけ差し替える」を出す（`cep/cutedit.js` の `replaceCut`）。終わったらコンポを読み直し、新しい uid のカットを選び直す
+
 ### 7.4 手直しを残す範囲（定義）
 
 | 残る | 残らない（作り直される） |
@@ -580,12 +589,12 @@ T-9 の `dev/cutedit_ui_test.py`（Playwright）は Chromium の導入が重い�
 
 | ファイル | 新規/既存 | 概要 |
 |---|---|---|
-| `ae/50_build.jsx` | 既存（構造変更） | §7.1 の切り出し（`jzBuildEnv` / `jzBuildCut` / `jzBuildTrans`）。本体の式は変えない。段階 1 のフックはそのまま `jzBuildCut` に移る |
+| `ae/50_build.jsx` | 既存（構造変更） | §7.1 の切り出し（`jzBuildEnv(plan, opt, inComp, inFolder)` / `jzBuildCut(E, cut, ci)` / `jzBuildTrans(E, A, B)`）。本体の式は変えない（`var` で E から受ける）。段階 1 のフックはそのまま `jzBuildCut` に移る。`jzBuildEnvFor` は作らず、`jzBuildEnv` の引数 `inComp` / `inFolder` で代える |
 | `ae/52_cutedit.jsx` | 既存（追加） | `JZ_CUTEDIT.replace`（§7.2）、つなぎの掃除（§7.3） |
-| `cep/host_cutedit.jsx` | 既存（追加） | `JZCEP.replaceCut(compId, layerId, cutJson, prevJson, nextJson)` |
+| `cep/host_cutedit.jsx` | 既存（追加） | `JZCEP.replaceCutFromFile(path)` / `replaceCutFromString(enc)`（§7.3.1） |
 | `cep/cutedit.js` | 既存（追加） | 「このカットだけ差し替える」ボタンと結果表示 |
-| `dev/cutedit_test.js` | 既存（追加） | T-1（ベースライン）、T-6 |
-| `dev/cutedit_baseline.json` | 新規 | T-1 の固定値 |
+| `dev/cutedit_test.js` | 既存（追加） | T-6（T-1 は段階 1 で前倒し済み。切り出し後も同じベースラインで一致） |
+| `dev/cutedit_ui_test.py` | 既存（追加） | 「このカットだけ差し替える」 |
 
 ### 10.4 upstream 追従の方針
 
@@ -640,7 +649,7 @@ T-9 の `dev/cutedit_ui_test.py`（Playwright）は Chromium の導入が重い�
 | `rebuildStartFromFile(path, oldCompId, optsEnc)` / `rebuildStartFromString(planEnc, oldCompId, optsEnc)` | plan（一時ファイル / URI エンコード）、opts `{keepOld}` | `{ok, name, total, events}` | 1 |
 | `rebuildStep(ms)` | — | 途中 `{ok, done:false, phase, cuts, total, eventsDone, events}`、完了 `{ok, done:true, cancelled, name, compId, replaced, keptOld, cuts, total, secs, notes, audio, stamped, missingFonts}` | 1 |
 | `rebuildCancel()` | — | `{ok}`（次の `rebuildStep` で中止処理） | 1 |
-| `replaceCut(compId, layerId, path)` | 一時ファイルに `{cut, prev, next, common}` | `{ok, secs, notes, uid}` | 2 |
+| `replaceCutFromFile(path)` / `replaceCutFromString(enc)` | 一時ファイル / URI エンコードに `{compId, plan, ci, uids, layerId, layerIndex}` | `{ok, uid, layerId, compId, secs, notes}` | 2 |
 
 ## 付録 B. AviUtl2 版との違い（ユーザー向け説明に使う）
 

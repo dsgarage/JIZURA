@@ -313,6 +313,31 @@ async function rebuild() {
   } catch (e) { status('作り直せませんでした: ' + (e && e.message ? e.message : e), true); }
   finally { ST.busy = false; busyUI(false); }
 }
+// stage 2 (§7): only the selected cut is rebuilt; what was changed by hand in the other cuts stays
+async function replaceCut() {
+  if (ST.busy || !ST.header || !ST.sel) return;
+  const list = ST.order.map(u => ST.cuts.get(u)), ci = ST.order.indexOf(ST.sel), x = ST.cuts.get(ST.sel);
+  const plan = buildPlan(ST.header, list, null);           // common settings go with a whole rebuild
+  const d = { compId: ST.compId, plan, ci, uids: ST.order, layerId: x.layerId, layerIndex: x.layerIndex };
+  ST.busy = true; busyUI(true);
+  try {
+    status(`このカットを差し替え中…（${String(x.i + 1).padStart(3, '0')}）`);
+    await new Promise(r => setTimeout(r, 30));
+    const txt = JSON.stringify(d);
+    let r;
+    if (fs && os && pathM) { const p = pathM.join(os.tmpdir(), 'jizura_cutedit_' + Date.now() + '.json'); fs.writeFileSync(p, txt, 'utf8'); r = await host('JZCEP.replaceCutFromFile(' + JSON.stringify(p) + ')'); }
+    else r = await host('JZCEP.replaceCutFromString(' + JSON.stringify(encodeURIComponent(txt)) + ')');
+    if (!r.ok) { status('差し替えられませんでした: ' + r.error, true); return; }
+    ST.lastLite = ''; ST.busy = false;
+    await loadComp(ST.compId);
+    await selectCut(r.uid);
+    let m = `このカットを差し替えました（${(+r.secs).toFixed(1)} 秒）。ほかのカットはそのままです。取り消すには AE で Cmd+Z（Windows は Ctrl+Z）`;
+    if (commonChanged()) m += ' / 共通設定の変更は「作り直す（コンポ全体）」で反映されます';
+    if (r.notes && r.notes.length) { m += ` / 注意 ${r.notes.length} 件`; console.warn('JIZURA cut replace notes', r.notes); }
+    status(m);
+  } catch (e) { status('差し替えられませんでした: ' + (e && e.message ? e.message : e), true); }
+  finally { ST.busy = false; busyUI(false); render(); }
+}
 function busyUI(b) {
   document.querySelectorAll('.ae-build, .ce-act').forEach(el => { el.disabled = b; });
   const c = $p('.ce-cancel'); if (c) c.hidden = !b;
@@ -370,6 +395,7 @@ function render() {
   const n = ST.dirty.size, cc = commonChanged();
   $p('.ce-summary').textContent = ST.header ? `変更あり: ${n} カット${cc ? ' / 共通設定' : ''}　　最終生成: ${ST.order.length} カット${ST.missing ? `（削除されたカット ${ST.missing} は除きます）` : ''}` : '';
   $p('.ce-rebuild').disabled = ST.busy || !ST.header;
+  $p('.ce-replace').disabled = ST.busy || !ST.header || !ST.sel;
   $p('.ce-readback').disabled = !(ST.header && ST.header.project);
   if (!ST.header) { body.innerHTML = '<p class="note">After Effects で JIZURA のコンポを開き、カットのレイヤーを選んでから「選択を読む」を押してください。</p>'; return; }
   const x = ST.sel ? ST.cuts.get(ST.sel) : null;
@@ -498,9 +524,9 @@ function inject() {
       <label class="row" style="gap:6px" title="1.5 秒ごとに AE の選択を確かめます。大きいプロジェクトでは AE が重くなることがあります"><input type="checkbox" class="ce-poll" ${poll ? 'checked' : ''}> 選択を追いかける（重くなることがあります）</label></div>
     <p class="note ce-status">—</p>
     <div class="ce-body"></div>
-    <div class="outbtns" style="margin-top:12px"><button class="primary ce-act ce-rebuild">作り直す（コンポ全体）</button><button class="small ce-cancel" hidden>中止</button></div>
+    <div class="outbtns" style="margin-top:12px"><button class="primary ce-act ce-replace" title="選んでいるカットだけを作り直します。ほかのカットに AE で加えた手直しは残ります">このカットだけ差し替える</button><button class="ce-act ce-rebuild">作り直す（コンポ全体）</button><button class="small ce-cancel" hidden>中止</button></div>
     <label class="row" style="gap:6px;margin-top:6px"><input type="checkbox" class="ce-keep"> 前のコンポを残す（「(old)」の名前で残します）</label>
-    <p class="note">作り直すと、ほかのカットに AE で加えた手直し（キーフレーム・エフェクトなど）は失われます。取り消すには AE で Cmd+Z</p>
+    <p class="note ce-hint">「作り直す（コンポ全体）」では、ほかのカットに AE で加えた手直し（キーフレーム・エフェクトなど）は失われます。直したのが 1 カットなら「このカットだけ差し替える」を使うと手直しが残ります。取り消すには AE で Cmd+Z</p>
     <div class="row" style="gap:6px;margin-top:6px"><button class="small ce-act ce-readback">このコンポの構成をパネルに読み戻す</button><button class="small ce-act ce-resetall">すべての編集を元に戻す</button></div>
     <p class="muted mono ce-summary"></p>`;
   const panes = document.querySelectorAll('.tabpane');
@@ -514,6 +540,7 @@ function inject() {
   $p('.ce-read').addEventListener('click', () => { ST.lastLite = ''; readSelection(true); });
   $p('.ce-poll').addEventListener('change', e => setPoll(e.target.checked));
   $p('.ce-rebuild').addEventListener('click', rebuild);
+  $p('.ce-replace').addEventListener('click', replaceCut);
   $p('.ce-cancel').addEventListener('click', () => { if (ST.busy) { cancelReq = true; status('中止しています…（元のコンポは残します）'); } });
   $p('.ce-readback').addEventListener('click', readBack);
   $p('.ce-resetall').addEventListener('click', () => {
@@ -531,5 +558,5 @@ function inject() {
 }
 const start = () => inject();
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => setTimeout(start, 0)); else setTimeout(start, 0);
-Object.assign(J.cutEdit, { state: ST, readSelection: () => readSelection(true), loadComp, selectCut, setEdit, rebuild, readBack, effective, render });
+Object.assign(J.cutEdit, { state: ST, readSelection: () => readSelection(true), loadComp, selectCut, setEdit, rebuild, replaceCut, readBack, effective, render });
 })();

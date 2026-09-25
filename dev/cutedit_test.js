@@ -312,6 +312,62 @@ const readJ = (JZ, v) => JSON.parse(JZ.JZ_CUTEDIT.json(v));
   check('T-7 選択の解決（メイン / wrapper 内 / content 内 / 非 JIZURA、名前変更・並べ替え・複製）', !errs.length, errs.join('; '));
 }
 
+// ---------------------------------------------------------------- T-6: replace one cut (stage 2)
+{
+  const errs = [], { env, JZ, comp } = buildStamped(aePlanOf(bplan, bproject)), CEd = JZ.JZ_CUTEDIT;
+  const readAll = () => { const h = readJ(JZ, CEd.header(comp.id)), cs = readJ(JZ, CEd.cuts(comp.id)); return { h: h.h, cuts: h.h.cuts.map(u => cs.cuts.find(x => x.uid === u)) }; };
+  const wrappers = () => comp._layers.filter(L => !/^JZ Trans /.test(L.name) && L.source instanceof AEOM.Comp && /"k":"cut"/.test(L.source.comment));
+  const tree = c => { const out = []; const walk = C => { out.push(C.id + ':' + JSON.stringify(C._layers.map(L => [L.name, L._in, L._out, L.children.map(propTree)]))); C._layers.forEach(L => { if (L.source instanceof AEOM.Comp) walk(L.source); }); }; walk(c); return out.join('|'); };
+  const mainView = c => c._layers.map(L => [L.name.replace(/^\d{3} .*/, m => m.slice(0, 3)), +L._in.toFixed(6), +L._out.toFixed(6), L.children.find(p => p.matchName === 'ADBE Effect Parade').children.map(e => e.name)]);
+  const replace = (ci, edit) => {
+    const R = readAll(), list = R.cuts.map((x, i) => ({ base: x.cut.base, edit: i === ci ? edit : x.cut.edit, ev: x.cut.ev }));
+    const plan2 = CE.buildPlan(R.h, list, null), x = R.cuts[ci];
+    const r = readJ(JZ, CEd.replace(comp.id, JZ.jzParseJSON(JSON.stringify({ plan: plan2, ci, uids: R.h.cuts, layerId: x.layerId, layerIndex: x.layerIndex }))));
+    return { r, plan2, R };
+  };
+  // a cut with a transition in or out
+  const ci = bplan.cuts.findIndex((c, i) => i > 0 && i < bplan.cuts.length - 1 && (c.trans || bplan.cuts[i + 1].trans));
+  const others0 = new Map(wrappers().filter(L => !L.name.startsWith(String(ci + 1).padStart(3, '0'))).map(L => [L.source.id, tree(L.source)]));
+  const fx0 = comp._layers.filter(L => /^JZ FX /.test(L.name)).map(L => L.name + '@' + L._in);
+  // a hand-made keyframe in another cut's content (V-7)
+  const k7 = wrappers().find(L => L.name.startsWith(String(((ci + 3) % bplan.cuts.length) + 1).padStart(3, '0'))), c7 = k7.source._layers.find(L => L.name === 'content').source;
+  c7._layers[0].property('ADBE Transform Group').property('ADBE Opacity').setValueAtTime(0.5, 37);
+  const sel0 = wrappers().find(L => L.name.startsWith(String(ci + 1).padStart(3, '0'))), order0 = wrappers().map(L => L.name.slice(0, 3)), oldSrc = sel0.source;
+  const { r, plan2, R } = replace(ci, { layout: 'vcols', decor: ['rings', null, null] });
+  if (!r.ok) errs.push('replace: ' + r.error);
+  else {
+    const W2 = wrappers(), nw = W2.find(L => L.name.startsWith(String(ci + 1).padStart(3, '0')));
+    if (!nw || nw.source === oldSrc || !same(W2.map(L => L.name.slice(0, 3)), order0)) errs.push('new layer not in the old place');
+    if (!/"edit":\{"layout":"vcols"/.test(nw.source.comment) || JSON.parse(nw.source.comment.slice(4)).base.layout !== R.cuts[ci].cut.base.layout) errs.push('new comment: base / edit');
+    for (const [id, t] of others0) { const L = W2.find(x => x.source.id === id); if (!L) errs.push('other wrapper gone ' + id); else if (tree(L.source) !== t && L.source !== k7.source) errs.push('other wrapper changed ' + L.name); }
+    if (!c7._layers[0].property('ADBE Transform Group').property('ADBE Opacity').keys.some(k => k.v === 37)) errs.push('hand-made keyframe lost');
+    if (!same(comp._layers.filter(L => /^JZ FX /.test(L.name)).map(L => L.name + '@' + L._in), fx0)) errs.push('JZ FX layers changed');
+    if (env.app.project._items().includes(oldSrc)) errs.push('old wrapper comp left');
+    const R2 = readAll(); if (R2.h.cuts[ci] !== r.uid || R2.cuts.some(x => !x)) errs.push('header cut list');
+    // the main comp looks like a fresh build of the same plan (wrappers, transition layers / effects, in / out points)
+    const fresh = load(); fresh.JZ.jzBuild(fresh.JZ.jzParseJSON(JSON.stringify(plan2)), {});
+    const fm = fresh.env.comps.find(c => /^JIZURA /.test(c.name)), A = mainView(comp), B = mainView(fm);
+    const key = v => JSON.stringify(v), sa = A.map(key).sort(), sb = B.map(key).sort();
+    if (!same(sa, sb)) errs.push('main comp differs from a fresh build: ' + sa.filter(v => !sb.includes(v)).slice(0, 3).join(' ') + ' <> ' + sb.filter(v => !sa.includes(v)).slice(0, 3).join(' '));
+    // V-8: take the transition away
+    const ct = plan2.cuts.findIndex((c, i) => i > 0 && c.trans);
+    const { r: r2, plan2: p3 } = replace(ct, { trans: null });
+    if (!r2.ok) errs.push('replace (trans off): ' + r2.error);
+    else {
+      const t0 = p3.cuts[ct].start, prevL = wrappers().find(L => L.name.startsWith(String(ct).padStart(3, '0')));
+      if (comp._layers.some(L => /^JZ Trans /.test(L.name) && Math.abs(L._in - t0) < 0.06)) errs.push('transition layers left');
+      const nw2 = wrappers().find(L => L.name.startsWith(String(ct + 1).padStart(3, '0')));
+      if (nw2.children.find(p => p.matchName === 'ADBE Effect Parade').children.some(e => /^JZ Trans /.test(e.name))) errs.push('transition effects left');
+      if (prevL.children.find(p => p.matchName === 'ADBE Effect Parade').children.some(e => /^JZ Trans out /.test(e.name))) errs.push('prev cut kept its "out" effects');
+      if (Math.abs(prevL._out - p3.cuts[ct - 1].end) > 1e-6) errs.push(`prev outPoint ${prevL._out} != ${p3.cuts[ct - 1].end}`);
+      const fresh2 = load(); fresh2.JZ.jzBuild(fresh2.JZ.jzParseJSON(JSON.stringify(p3)), {});
+      const sa2 = mainView(comp).map(v => JSON.stringify(v)).sort(), sb2 = mainView(fresh2.env.comps.find(c => /^JIZURA /.test(c.name))).map(v => JSON.stringify(v)).sort();
+      if (!same(sa2, sb2)) errs.push('after trans off: differs from a fresh build');
+    }
+  }
+  check(`T-6 1 カットの差し替え（カット ${ci + 1}: 他のカット・手直し・JZ FX は不変、つなぎは新規生成と一致、つなぎを外す）`, !errs.length, errs.join('; '));
+}
+
 // ---------------------------------------------------------------- T-8: ES3 syntax of the new ExtendScript files
 {
   const errs = [];

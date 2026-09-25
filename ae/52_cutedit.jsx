@@ -122,9 +122,8 @@ function jzCEHeaderText(comp) {
 // plan.__project = the browser project (optional), plan.__cutedit = {cuts: [{base, edit}]} parallel to plan.cuts (a rebuild).
 function jzCEStamp(comp, plan, extra) {
     extra = extra || {};
-    var notes = [], cuts = plan.cuts || [], ce = plan.__cutedit || null, i, k;
+    var notes = [], cuts = plan.cuts || [], i, k;
     var uid = 'm-' + jzCEHash36(plan.seed, plan.title, new Date().getTime(), Math.random());
-    var st = plan.style, schemes = st.schemes, fx = plan.fx || {};
     // wrapper layers of this build, matched to the plan's cuts by number (the layer name / comp name start with it) and start time
     var W = jzCEWrappers0(comp), byCut = [], folder = null, uids = [];
     for (i = 0; i < cuts.length; i++) {
@@ -134,23 +133,8 @@ function jzCEStamp(comp, plan, extra) {
     }
     for (i = 0; i < cuts.length; i++) {
         var w2 = byCut[i]; if (!w2) continue;
-        var cut = cuts[i], cuid = 'c-' + jzCEHash36(uid, i, cut.start), base = ce && ce.cuts && ce.cuts[i] ? ce.cuts[i].base : cut, edit = ce && ce.cuts && ce.cuts[i] ? (ce.cuts[i].edit || {}) : {};
-        var ev = [], evs = plan.events || [];
-        for (k = 0; k < evs.length; k++) if (evs[k].t >= cut.start - 0.7 && evs[k].t <= cut.end) ev.push(evs[k]);
-        var bcopy = jzCopy(base); delete bcopy.ov;
-        var rec = { jz: 1, k: 'cut', uid: cuid, main: uid, i: i, base: bcopy, edit: edit, ev: ev, sc: schemes[(base.scheme || 0) % schemes.length] || schemes[0], fx: fx };
-        var body = jzCEStr(rec);
-        if (body.length > JZ_CE_LIMIT) { rec.ev = []; body = jzCEStr(rec); notes.push('cut ' + (i + 1) + ': 効果イベントを保存できませんでした（大きすぎます）'); }
-        if (body.length > JZ_CE_LIMIT) { notes.push('cut ' + (i + 1) + ': 構成が大きすぎて保存できません'); continue; }
-        jzCEWrite(w2.comp, body);
-        var tagC = jzCEStr({ jz: 1, k: 'content', uid: cuid }), tagG = jzCEStr({ jz: 1, k: 'ghost', uid: cuid });
-        for (k = 1; k <= w2.comp.numLayers; k++) {
-            var L = w2.comp.layer(k), S = null;
-            try { S = L.source && jzCEIsComp(L.source) ? L.source : null; } catch (e) { S = null; }
-            if (!S) continue;
-            if (L.name === 'content') jzCEWrite(S, tagC);
-            else if (/ ghost$/.test(S.name) && !jzCETag(S)) jzCEWrite(S, tagG);
-        }
+        var cuid = 'c-' + jzCEHash36(uid, i, cuts[i].start);
+        if (!jzCEStampCut(w2.comp, plan, i, cuid, uid, notes)) continue;
         if (!folder) { try { folder = w2.comp.parentFolder; } catch (ef) { folder = null; } }
         uids.push(cuid);
     }
@@ -172,15 +156,41 @@ function jzCEStamp(comp, plan, extra) {
     var H = { jz: 1, k: 'main', uid: uid, v: 1, plan: hp, project: plan.__project || null, cuts: uids, engine: engine };
     var text = jzCEStr(H);
     if (text.length > JZ_CE_LIMIT * 2 && H.project) { H.project = null; text = jzCEStr(H); notes.push('歌詞が長いため、パネルへの読み戻し用の設定は保存しませんでした（作り直しはできます）'); }
-    if (text.length > JZ_CE_LIMIT * 2) return { ok: false, error: '構成が大きすぎて保存できません（' + text.length + ' バイト）', notes: notes };
-    if (text.length <= JZ_CE_LIMIT) jzCEWrite(comp, text);
-    else {
-        if (!folder) return { ok: false, error: '構成の続きを書く cuts フォルダが見つかりません', notes: notes };
-        var cut1 = JZ_CE_LIMIT - 100;
-        jzCEWrite(comp, jzCEStr({ jz: 1, k: 'main', uid: uid, chunks: 2 }) + '\n' + text.substr(0, cut1));
-        jzCEWrite(folder, jzCEStr({ jz: 1, k: 'main2', uid: uid, seq: 2 }) + '\n' + text.substr(cut1));
-    }
+    var err = jzCEWriteHeader(comp, folder, uid, text);
+    if (err) return { ok: false, error: err, notes: notes };
     return { ok: true, uid: uid, cuts: uids.length, of: cuts.length, bytes: text.length, chunks: text.length <= JZ_CE_LIMIT ? 1 : 2, notes: notes };
+}
+// the cut comment of wrapper comp wc (plan.cuts[i]; base / edit from plan.__cutedit when the panel sent them) + the content / ghost tags
+function jzCEStampCut(wc, plan, i, cuid, mainUid, notes) {
+    var ce = plan.__cutedit && plan.__cutedit.cuts ? plan.__cutedit.cuts[i] : null, cut = plan.cuts[i], k;
+    var base = ce ? ce.base : cut, edit = ce ? (ce.edit || {}) : {}, schemes = plan.style.schemes;
+    var ev = [], evs = plan.events || [];
+    for (k = 0; k < evs.length; k++) if (evs[k].t >= cut.start - 0.7 && evs[k].t <= cut.end) ev.push(evs[k]);
+    var bcopy = jzCopy(base); delete bcopy.ov;
+    var rec = { jz: 1, k: 'cut', uid: cuid, main: mainUid, i: i, base: bcopy, edit: edit, ev: ev, sc: schemes[(base.scheme || 0) % schemes.length] || schemes[0], fx: plan.fx || {} };
+    var body = jzCEStr(rec);
+    if (body.length > JZ_CE_LIMIT) { rec.ev = []; body = jzCEStr(rec); notes.push('cut ' + (i + 1) + ': 効果イベントを保存できませんでした（大きすぎます）'); }
+    if (body.length > JZ_CE_LIMIT) { notes.push('cut ' + (i + 1) + ': 構成が大きすぎて保存できません'); return false; }
+    jzCEWrite(wc, body);
+    var tagC = jzCEStr({ jz: 1, k: 'content', uid: cuid }), tagG = jzCEStr({ jz: 1, k: 'ghost', uid: cuid });
+    for (k = 1; k <= wc.numLayers; k++) {
+        var L = wc.layer(k), S = null;
+        try { S = L.source && jzCEIsComp(L.source) ? L.source : null; } catch (e) { S = null; }
+        if (!S) continue;
+        if (L.name === 'content') jzCEWrite(S, tagC);
+        else if (/ ghost$/.test(S.name) && !jzCETag(S)) jzCEWrite(S, tagG);
+    }
+    return true;
+}
+// header text into the main comp (and the cuts folder when it does not fit one comment); an error message or null
+function jzCEWriteHeader(comp, folder, uid, text) {
+    if (text.length > JZ_CE_LIMIT * 2) return '構成が大きすぎて保存できません（' + text.length + ' バイト）';
+    if (text.length <= JZ_CE_LIMIT) { jzCEWrite(comp, text); return null; }
+    if (!folder) return '構成の続きを書く cuts フォルダが見つかりません';
+    var cut1 = JZ_CE_LIMIT - 100;
+    jzCEWrite(comp, jzCEStr({ jz: 1, k: 'main', uid: uid, chunks: 2 }) + '\n' + text.substr(0, cut1));
+    jzCEWrite(folder, jzCEStr({ jz: 1, k: 'main2', uid: uid, seq: 2 }) + '\n' + text.substr(cut1));
+    return null;
 }
 // wrapper layers of a just-built main comp (no comments yet): precomp layers whose comp contains a 'content' layer
 function jzCEWrappers0(comp) {
@@ -320,5 +330,65 @@ function jzCERemoveTree(comp) {
     return true;
 }
 
-var JZ_CUTEDIT = { stamp: jzCEStamp, sel: jzCESel, selLite: jzCESelLite, header: jzCEHeader, cuts: jzCECuts, parts: jzCEParts, selectLayer: jzCESelectLayer,
+// ---------------------------------------------------------------- replace one cut (§7): the rest of the comp — and what the user changed there — stays
+// the transition layers of the boundary at time t into a cut of length dur: every transition names its layers 'JZ Trans …'
+// and they live within [t, t + its length], which is at most 0.6 x the cut (jzBuildTrans) — so never past the next boundary
+function jzCERemoveTransAt(comp, t, dur) {
+    for (var i = comp.numLayers; i >= 1; i--) { var L = comp.layer(i); if (/^JZ Trans /.test(L.name) && L.inPoint > t - 0.06 && L.inPoint < t + Math.max(0.1, dur * 0.6) + 0.02) L.remove(); }
+}
+// a wrapper layer's transition effects: 'out' = those it got as the previous cut (named 'JZ Trans out …'), else those it got as the new cut
+function jzCERemoveTransFx(L, out) {
+    var fx = L.property('ADBE Effect Parade');
+    for (var i = fx.numProperties; i >= 1; i--) { var n = fx.property(i).name; if (/^JZ Trans /.test(n) && /^JZ Trans out /.test(n) === out) fx.property(i).remove(); }
+}
+// the wrapper {cut, layer, comp, sc} of a neighbour cut for jzBuildTrans (its scheme after its own overrides)
+function jzCENeighbour(E, cut, L) {
+    cut.dur = cut.end - cut.start;
+    return { cut: cut, layer: L, comp: L.source, sc: jzCutCtx(cut, E.st, E.FXV, E.schemeOf(cut)).sc };
+}
+// d = {plan (whole, like a rebuild), ci (the cut's place in plan.cuts), uids (parallel to plan.cuts), layerId, layerIndex}
+function jzCEReplace(mainId, d, opt) {
+    opt = opt || {};
+    var main = jzCEMainById(mainId); if (!main) return { ok: false, error: 'JIZURA のコンポが見つかりません' };
+    var plan = d.plan, ci = d.ci, cuts = plan.cuts, cut = cuts[ci], uids = d.uids || [], notes = [], i;
+    if (!cut || !(cut.end > cut.start)) return { ok: false, error: 'このカットは差し替えられません' };
+    var W = jzCEWrappers(main), w0 = null, prevL = null, nextL = null;
+    for (i = 0; i < W.length && !w0; i++) { var lid = null; try { lid = W[i].L.id; } catch (e) { lid = null; } if (lid != null && lid === d.layerId) w0 = W[i]; }
+    for (i = 0; i < W.length && !w0; i++) if (W[i].L.index === d.layerIndex && W[i].tag.uid === uids[ci]) w0 = W[i];
+    if (!w0) return { ok: false, error: '差し替えるレイヤーが見つかりません（「選択を読む」で読み直してください）' };
+    for (i = 0; i < W.length; i++) {
+        if (ci > 0 && !prevL && W[i].tag.uid === uids[ci - 1]) prevL = W[i].L;
+        if (ci + 1 < cuts.length && !nextL && W[i].tag.uid === uids[ci + 1]) nextL = W[i].L;
+    }
+    var prev = prevL ? cuts[ci - 1] : null, next = nextL ? cuts[ci + 1] : null;
+    if (ci > 0 && !prevL) notes.push('前のカットのレイヤーが見つからないので、前とのつなぎは作りません');
+    if (ci + 1 < cuts.length && !nextL) notes.push('次のカットのレイヤーが見つからないので、次とのつなぎは作りません');
+    var L0 = w0.L, oldComp = w0.comp, oldUid = w0.tag.uid, folder = null;
+    try { folder = oldComp.parentFolder; } catch (ef) { folder = null; }
+    var E = jzBuildEnv(plan, { roles: opt.roles }, main, folder);
+    // the new wrapper, in the old layer's place (stacking order, label, shy, parent)
+    var w = jzBuildCut(E, cut, ci);
+    w.layer.moveBefore(L0);
+    try { w.layer.label = L0.label; w.layer.shy = L0.shy; if (L0.parent) w.layer.parent = L0.parent; } catch (e1) {}
+    // boundaries: take away what the old transitions made, then build the plan's
+    jzCERemoveTransAt(main, cut.start, Math.max(cut.end - cut.start, w0.L.outPoint - w0.L.inPoint));
+    if (prevL) { jzCERemoveTransFx(prevL, true); prevL.outPoint = prev.end; }
+    if (nextL) { jzCERemoveTransAt(main, next.start, next.end - next.start); jzCERemoveTransFx(nextL, false); }
+    L0.remove();
+    if (prevL && cut.trans) jzBuildTrans(E, jzCENeighbour(E, prev, prevL), w);
+    if (nextL && next.trans) jzBuildTrans(E, w, jzCENeighbour(E, next, nextL));
+    // the old wrapper tree goes when nothing else uses it (a duplicated layer may)
+    try { if (!jzCERemoveTree(oldComp)) notes.push('前のカットのコンポはほかのレイヤーが使っているので残しました'); } catch (e2) { notes.push('前のカットのコンポを削除できませんでした: ' + e2.toString()); }
+    try { jzTidyTree(w.comp); } catch (et) { jzWarn('tidy: ' + et.toString()); }
+    // comments: the new wrapper (base / edit stay as sent), the header's cut list
+    var mt = jzCETag(main), cuid = 'c-' + jzCEHash36(mt.uid, ci, cut.start, new Date().getTime());
+    if (!jzCEStampCut(w.comp, plan, ci, cuid, mt.uid, notes)) return { ok: false, error: 'カットの構成を保存できませんでした', notes: notes };
+    var h = jzCEHeaderText(main);
+    if (h != null) { var err = jzCEWriteHeader(main, folder, mt.uid, h.split('"' + oldUid + '"').join('"' + cuid + '"')); if (err) notes.push(err); }
+    else notes.push('構成情報（ヘッダ）が読めないため、カット一覧は更新していません');
+    var log = JZLOG || []; for (i = 0; i < log.length && notes.length < 20; i++) notes.push(String(log[i]));
+    return { ok: true, uid: cuid, layerId: w.layer.id, compId: main.id, notes: notes };
+}
+
+var JZ_CUTEDIT = { stamp: jzCEStamp, replace: jzCEReplace, sel: jzCESel, selLite: jzCESelLite, header: jzCEHeader, cuts: jzCECuts, parts: jzCEParts, selectLayer: jzCESelectLayer,
     writeEdit: jzCEWriteEdit, audioOf: jzCEAudioOf, removeTree: jzCERemoveTree, mainById: jzCEMainById, tag: jzCETag, json: jzCEStr, headerText: jzCEHeaderText, limit: function (n) { if (n > 0) JZ_CE_LIMIT = n; return JZ_CE_LIMIT; } };

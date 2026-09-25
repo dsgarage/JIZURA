@@ -1,5 +1,5 @@
 /*  JIZURA 字面 — host side of the CEP panel's "カット編集" tab (ExtendScript, ES3). Loaded by cep.js after host.jsx;
-    adds JZCEP.cut* / JZCEP.rebuild*. The work itself is JZ_CUTEDIT in the engine (ae/52_cutedit.jsx). docs/dsgarage/CUT_EDIT_SPEC.md  */
+    adds JZCEP.cut* / JZCEP.rebuild* / JZCEP.replaceCut*. The work itself is JZ_CUTEDIT in the engine (ae/52_cutedit.jsx). docs/dsgarage/CUT_EDIT_SPEC.md  */
 (function () {
     if (typeof JZCEP !== 'object' || !JZCEP) return;
     function core() {
@@ -130,5 +130,17 @@
         return out(function (C) { return rebuildStart(C, decodeURIComponent(encPlan), oldId, C.parse(decodeURIComponent(enc || '%7B%7D'))); });
     };
     JZCEP.rebuildStep = function (ms) { return out(function (C) { return rebuildStep(C, ms); }); };
+    // replace one cut (stage 2): d = {compId, plan, ci, uids, layerId, layerIndex}. One undo step.
+    function replaceCut(C, s) {
+        var d = C.parse(s), t0 = new Date().getTime(), r, ex = null;
+        app.beginUndoGroup('JIZURA カット編集: カット差し替え');
+        try { r = C.cutEdit.replace(d.compId, d, { roles: roles(C) }); } catch (e) { ex = e; }
+        app.endUndoGroup();
+        if (ex) throw ex;
+        r.secs = (new Date().getTime() - t0) / 1000;
+        return r;
+    }
+    JZCEP.replaceCutFromFile = function (path) { return out(function (C) { var s = readTemp(path); return s == null ? { ok: false, error: '構成データの一時ファイルが見つかりません' } : replaceCut(C, s); }); };
+    JZCEP.replaceCutFromString = function (enc) { return out(function (C) { return replaceCut(C, decodeURIComponent(enc)); }); };
     JZCEP.rebuildCancel = function () { if (rb) rb.job.cancelled = true; return '{"ok":true}'; };
 })();
