@@ -41,11 +41,14 @@
     }
     function rebuildStep(C, ms) {
         if (!rb) return { ok: false, error: '作り直し中のコンポがありません' };
-        var job = rb.job, r = rb, err = null;
-        app.beginUndoGroup('JIZURA カット編集: 作り直し');
-        try { job.step(ms > 0 ? ms : 1200); } catch (e) { err = e.toString() + (e.line ? ' (line ' + e.line + ')' : ''); }
-        finally { app.endUndoGroup(); }
-        if (!err && !job.finished) return { ok: true, done: false, phase: job.phase, cuts: job.done, total: job.total, eventsDone: job.eventsDone, events: job.events };
+        var job = rb.job, r = rb, err = null, t0 = new Date().getTime();
+        // the build first (job steps); the stamp / old comp clean-up in a step of its own, so no call holds After Effects long
+        if (!job.finished) {
+            app.beginUndoGroup('JIZURA カット編集: 作り直し');
+            try { job.step(ms > 0 ? ms : 1200); } catch (e) { err = e.toString() + (e.line ? ' (line ' + e.line + ')' : ''); }
+            finally { app.endUndoGroup(); }
+            if (!err) return { ok: true, done: false, phase: job.finished ? 'stamp' : job.phase, cuts: job.done, total: job.total, eventsDone: job.eventsDone, events: job.events, stepMs: new Date().getTime() - t0 };
+        }
         rb = null;
         var log = C.log() || [], notes = [], i, comp = job.comp;
         app.beginUndoGroup('JIZURA カット編集: 作り直し');
@@ -71,7 +74,7 @@
             comp.name = r.oldName;
             for (i = 0; i < log.length && i < 20; i++) notes.push(String(log[i]));
             return { ok: true, done: true, cancelled: false, name: comp.name, compId: comp.id, replaced: replaced, keptOld: oldAlive && !replaced, cuts: job.done, total: job.total,
-                secs: (new Date().getTime() - r.t0) / 1000, fallbacks: C.fallbacks(), notes: notes, notesTotal: log.length, audio: r.audio, stamped: ce.ok,
+                secs: (new Date().getTime() - r.t0) / 1000, stepMs: new Date().getTime() - t0, fallbacks: C.fallbacks(), notes: notes, notesTotal: log.length, audio: r.audio, stamped: ce.ok,
                 missingFonts: C.missingFonts ? C.missingFonts() : [] };
         } finally { app.endUndoGroup(); }
     }

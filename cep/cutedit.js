@@ -286,13 +286,17 @@ async function rebuild() {
       r = await host('JZCEP.rebuildStartFromFile(' + JSON.stringify(p) + ',' + (ST.compId | 0) + ',' + o + ')');
     } else r = await host('JZCEP.rebuildStartFromString(' + JSON.stringify(encodeURIComponent(txt)) + ',' + (ST.compId | 0) + ',' + o + ')');
     const t0 = performance.now();
+    // timings: stepMs = time inside the script, the rest of a call's round trip is After Effects busy elsewhere (redraws …)
+    const T = ST.timings = [];
     while (r.ok && !r.done) {
       if (cancelReq) { await ev('JZCEP.rebuildCancel()'); cancelReq = false; }
+      const c0 = performance.now();
       r = await host('JZCEP.rebuildStep(1200)');
+      T.push({ phase: r.phase, cuts: r.cuts, stepMs: r.stepMs, callMs: Math.round(performance.now() - c0) });
       if (!r.ok || r.done) break;
       const k = r.phase === 'cuts' ? r.cuts / Math.max(1, r.total) * 0.9 : 0.9 + 0.1 * (r.eventsDone || 0) / Math.max(1, r.events || 1);
       const el = (performance.now() - t0) / 1000, left = k > 0.03 ? el / k - el : null;
-      status(`作り直し中… ${Math.round(k * 100)}%（${r.phase === 'cuts' ? `${r.cuts} / ${r.total} カット` : '効果を追加中'}${left != null ? `・残り約 ${Math.max(1, Math.round(left))} 秒` : ''}）`);
+      status(`作り直し中… ${Math.round(k * 100)}%（${r.phase === 'cuts' ? `${r.cuts} / ${r.total} カット` : r.phase === 'stamp' ? '仕上げ中' : '効果を追加中'}${left != null ? `・残り約 ${Math.max(1, Math.round(left))} 秒` : ''}）`);
       await new Promise(res => setTimeout(res, 40));
     }
     if (!r.ok) { status('作り直せませんでした: ' + r.error, true); return; }
@@ -305,6 +309,7 @@ async function rebuild() {
     if (r.missingFonts && r.missingFonts.length) m += ` / この PC に無い書体（${r.missingFonts.join('・')}）は近い書体で作りました`;
     status(m);
     if (r.notes && r.notes.length) console.warn('JIZURA cut edit notes', r.notes);
+    console.info('JIZURA rebuild steps (ms)', JSON.stringify(T));
   } catch (e) { status('作り直せませんでした: ' + (e && e.message ? e.message : e), true); }
   finally { ST.busy = false; busyUI(false); }
 }
