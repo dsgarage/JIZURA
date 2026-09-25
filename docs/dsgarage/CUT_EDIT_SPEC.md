@@ -376,6 +376,8 @@ AviUtl2 版 `bridge.js` の規則をそのまま採用し、次の点だけ決�
 
 ### 5.7 プレビュー
 
+**段階 1・2 には入れていない**（§11-10 の決定どおり段階 1.5。以下は段階 1.5 の設計）。
+
 AviUtl2 版 `bridge.js` の `nativeCut` 描画（`aviRender` 内 146-183 行付近）と同じ方法でブラウザエンジンだけで描ける。
 
 - ヘッダの plan ＋ 実効 cut から「そのカットだけの plan」を作る: `cuts = [prev(つなぎがあるとき、start=-prevDur), cut(start=0, end=dur)]`、`events` は `[origin-0.8, origin+dur]` を平行移動、`hud:false`、`beats`/`energy` は無し
@@ -441,7 +443,7 @@ jzBuildEnvFor(comp, folder, plan, opt)  … 段階 2 の差し替え用。既存
 - 変更行数の目安: 関数ヘッダ ＋ `B.xxx` への置換。式は変えない。段階 1 のフック（§4.4）は `jzBuildCut` の中にそのまま移る
 - `jzBuildCut` は `label`（`jzPad(ci+1,3) + ' ' + text`）を `ci` から作るので、差し替え時は **元のカット番号** を渡す
 - `dev/cutedit_test.js` の T-1（72 ビルドの出力全体の sha1）が回帰テストになる
-- upstream への還元: §11-7 の決定どおり PR を出す。取り込まれるまでは fork の `develop` で保持する
+- upstream への還元はしない（§11-7 の決定: fork のみで管理）。upstream に追従するときの衝突は T-1 / T-4c（出力全体の sha1）で担保する
 
 ### 7.2 差し替え手順 `JZ_CUTEDIT.replace(mainComp, layerId, cut, prevCut, nextCut, opt)`
 
@@ -504,7 +506,7 @@ jzBuildEnvFor(comp, folder, plan, opt)  … 段階 2 の差し替え用。既存
 | T-6 | `replace`（段階 2）: 12 カットのコンポで 5 番目を差し替え、他の wrapper コンポの `id` と中身（レイヤー数・エクスプレッション）が変わらない。`JZ Trans` レイヤーの数が前後で一致。`JZ FX <name>` レイヤーが変わらない | 一致 |
 | T-7 | `cutSel` の解決: メインコンポ/ wrapper 内/ content 内/ 非 JIZURA の 4 通りと、レイヤー名変更・複製・並べ替え後 | 期待どおりの `uid`/`why` |
 | T-8 | ES3 構文: `ae/52_cutedit.jsx` と `cep/host_cutedit.jsx` を `acorn` の `ecmaVersion:3` で解析 | エラーなし（`dev/ae_test.js` と同じ検査） |
-| T-9 | パネル JS: `dev/cutedit_ui_test.py`（Playwright、CEP モック）で「カット編集タブが出る」「選択を読む→フォームに base の値が出る」「レイアウトを変えて作り直す→`rebuildStart*`/`rebuildStep` が呼ばれ、モック上のコンポが置き換わる」「選択なし→カット一覧→クリックで AE 側の選択」「読み戻し」。既存の `dev/cep_test.py` はリポジトリに無い `aerender.js` を前提にしていて単独では動かないため、同じモック方式の別ファイルにした | 通る |
+| T-9 | パネル JS: `dev/cutedit_ui_test.py`（Playwright、CEP モック）で「カット編集タブが出る」「選択を読む→フォームに base の値が出る」「レイアウトを変えて作り直す→`rebuildStart*`/`rebuildStep` が呼ばれ、モック上のコンポが置き換わる」「選択なし→カット一覧→クリックで AE 側の選択」「読み戻し」。既存の `dev/cep_test.py` はリポジトリに無い `aerender.js`（AE モックの描画器）と `dev/www/` を前提にしていて、このリポジトリだけでは実行できない。そのため T-9 は同じモック方式（描画なし）の別ファイルで行い、本物の CEP パネルでの確認は実機の V-2〜V-8（デバッグ版パネルを CDP で操作）で代替する | 通る |
 | T-9a | host の作り直しを Node で: `host.jsx` ＋ `host_cutedit.jsx` ＋ `jizura_core.jsx` をモック上で読み、生成 → 選択 → 読み出し → 編集 → `rebuildStartFromFile`/`rebuildStep` → 旧コンポ置換・曲レイヤーの引き継ぎ・古いコンポの取り残しなし、中止で旧コンポが残る、「残す」で ` (old)` | 通る |
 
 モックの拡張（`dev/aeom.js`、既存ファイルの小変更）: `Comp` と `FolderItem`（`Folder` クラスにした）に `comment`（既定 `''`）、`Comp.usedIn` / `remove()` / `time`、`Folder.numItems` / `item()` / `remove()`、`Layer.selected` と `CompItem.selectedLayers`（AE と同じく `selected` から決まる getter）、`openInViewer()` でアクティブアイテムになる、`app.project.rootFolder`。`Layer.id` は既存の `Prop.id` を流用。
@@ -542,7 +544,7 @@ jzBuildEnvFor(comp, folder, plan, opt)  … 段階 2 の差し替え用。既存
 - node dev/cutedit_test.js       # 新規（T-1〜T-8）
 ```
 
-T-9 の `dev/cutedit_ui_test.py`（Playwright）は Chromium の導入が重いので `test` とは別の任意ジョブ `cep-ui`（`continue-on-error`、必須にしない）にする。fork のブランチ保護（`~/.claude/rules/git-flow.md`）の必須チェックは `test` だけ。upstream への PR には workflow ファイルを含めない（fork 固有）。
+T-9 の `dev/cutedit_ui_test.py`（Playwright）は Chromium の導入が重いので `test` とは別の任意ジョブ `cep-ui`（`continue-on-error`、必須にしない）にする。fork のブランチ保護（`~/.claude/rules/git-flow.md`）の必須チェックは `test` だけ。CI は PR #4（develop ff903ac）の 4 段ビルド ＋ `git diff --exit-code` のあとに `dev/ae_test.js` と `dev/cutedit_test.js` を足した形にしている（fork 固有）。
 
 ---
 
@@ -588,12 +590,12 @@ T-9 の `dev/cutedit_ui_test.py`（Playwright）は Chromium の導入が重い�
 ### 10.4 upstream 追従の方針
 
 - 新規ファイルに寄せる。既存ファイルの変更は上表の行数に抑え、それぞれ 1 箇所の挿入にする（`git rebase` で衝突しても手で解消できる粒度）
-- `ae/50_build.jsx` は段階 1 でループ先頭のフック（1 箇所）、段階 2 で切り出し（同じ箇所）。upstream への PR はユーザー判断（§11 未決 7）
+- `ae/50_build.jsx` は段階 1 で `buildCut` 先頭のフック（1 箇所）、段階 2 で切り出し（同じ箇所）。upstream への PR は送らない（§11-7）
 - `cep/host.jsx` の `str()` を使い回したくなるが、`host.jsx` を触る範囲を広げないため `host_cutedit.jsx` に複製する
 
 ---
 
-## 11. 決定事項（0.1 の未決事項。2026-09-25 ユーザー承認で **すべて推奨案に決定**、#7 は「upstream に PR を送る」）
+## 11. 決定事項（0.1 の未決事項。2026-09-25 ユーザー承認で **すべて推奨案に決定**。#7 だけは「fork のみで管理」に決定）
 
 | # | 事項 | 選択肢 | 決定（推奨案） |
 |---|---|---|---|
@@ -603,7 +605,7 @@ T-9 の `dev/cutedit_ui_test.py`（Playwright）は Chromium の導入が重い�
 | 4 | `density` / `bgSwitch` / `flash`（プランナ時の項目）と、カット単位の `decor`（装飾の量。AviUtl2 では再プランで効くが AE の生成時には読まれない）をタブでどう扱うか | (a) 表示しない (b) 表示して「読み戻し → 演出タブで変更 → 生成」に誘導 (c) タブ内で `J.plan` を再実行（per-cut 編集は破棄） (d) カット単位の `decor` だけ、`base.decor` の個数を `round(len × edit/共通)` で増減して近似 | **(b)**。AviUtl2 と同等の項目は見せつつ、破壊的な再プランは既存 UI に任せる。カット単位の装飾の量は装飾 1〜3 の選択で代替できるので (d) はやらない |
 | 5 | つなぎを外したとき、`base.enter` が `'cut'` に固定されている場合の登場 | (a) `'blur'` 固定 (b) `pickEnter` をブラウザ側で呼ぶ（`src/08_planner.js` の非公開関数なので不可） (c) ユーザーに登場を選ばせる（元の設定を「カット」と表示） | **(c)**。誤魔化さない。UI の「元の設定（カット）」で分かる |
 | 6 | 英語版 CEP（`build_cep.py --lang en`）での文言 | (a) 日本語のまま (b) `localize_cep` に辞書を足す | **(a)** で始め、動いてから (b) |
-| 7 | `ae/50_build.jsx` の切り出し（と §4.4 のフック）を upstream に PR するか | (a) fork だけ (b) upstream に PR（テスト T-1 付き） | **決定: (b) upstream に PR を送る**（2026-09-25 ユーザー承認）。取り込まれれば fork の唯一の構造変更が消える。取り込まれない間は rebase のたびに T-1 / T-4c で担保 |
+| 7 | `ae/50_build.jsx` の切り出し（と §4.4 のフック）を upstream に PR するか | (a) fork だけ (b) upstream に PR（テスト T-1 付き） | **決定: (a) fork のみで管理（upstream への PR は送らない）**（2026-09-25 ユーザー指示で変更）。切り出しは段階 2 で fork に入れ、upstream に追従するときの衝突は T-1 / T-4c で担保する |
 | 8 | 段階 2 で差し替えた wrapper の `base` | (a) 差し替え時点の実効 cut を新しい `base` にし `edit={}` (b) 元の `base` と `edit` を保つ | **(b)**。「元の設定」が生成時の値を指し続け、AviUtl2 の意味と揃う |
 | 9 | 選択のポーリング既定 | OFF / ON | **OFF**（§0.5 のクラッシュ報告）。V-10 で問題なければ ON を検討 |
 | 10 | プレビューを段階 1 に含めるか | 含める / 段階 1.5 | **段階 1.5**（タブと作り直しが動いてから）。フォーム・保存・作り直しが本体で、プレビューは独立に足せる |
@@ -611,6 +613,18 @@ T-9 の `dev/cutedit_ui_test.py`（Playwright）は Chromium の導入が重い�
 | 12 | カット単位で色を上書きしたとき、効果イベント `JZ FX <name>` の色（`ae/50_build.jsx:154` の `schemeOf(jzCutAtTime(...))`）が元の scheme のまま | (a) 段階 1 はそのまま（注記） (b) `:154` にも `jzCutCtx` を通す（フック 2 箇所目） | **(a)**。イベントは数フレームで、色が違って見える部品は限られる。実機 V-3b で目立てば (b) |
 
 ---
+
+## 12. 0.1 の仕様から外れた点（実装で決めたこと）
+
+| # | 0.1 の仕様 | 実装 | 理由 |
+|---|---|---|---|
+| 1 | ヘッダの `lines` は `chunks` を除くだけ（1 行 ≈ 130 B の見積り） | `index`、および同じ本文を持つカットがある行の `text` も省き、パネルが `base.line` / `base.lineText` から戻す（§2.3.1） | 実測で 1 行 ≈ 240 B あり、100 行の歌詞では `project` を落としても 2 枠（28,000 B）を超えた。圧縮後は 100 行・347 カットで 27 KB（project 込み） |
+| 2 | 作り直しは Undo 1 手（§5.5、§6.3） | upstream 4f9dab6 の段階実行に合わせ、作り直しもジョブ（`rebuildStart*` / `rebuildStep` / `rebuildCancel`）。Undo グループは step ごとに分かれ、Cmd+Z 1 回で戻るのは最後の「stamp と旧コンポの削除」まで（旧コンポが戻る）。新コンポまで消すには何回か取り消す（§6.2 の注意） | AE を止めないための upstream の方式に合わせた。1 つの Undo グループにまとめると step の間に AE へ制御を返せない |
+| 3 | プレビュー（§5.7） | 入れていない（段階 1.5） | §11-10 の決定どおり |
+| 4 | T-9 は `dev/cep_test.py` に追加 | 新規 `dev/cutedit_ui_test.py`。本物のパネルでの確認は V-* で代替 | §9.1 の T-9 の行 |
+| 5 | host の JSON 化は `str()` の複製 | エンジンの `JZ_CUTEDIT.json` を使う（複製なし） | §10.2 |
+
+補足: PR #4（develop ff903ac）で入った行ごとのカット手法の差し替え（`project.overrides[行].cutTech`）はブラウザで plan に反映されてから AE に渡るので、カット編集の `base` はその反映後の plan になる。
 
 ## 付録 A. 新規 host API（`JZCEP.*`）一覧
 
