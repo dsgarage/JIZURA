@@ -55,9 +55,11 @@
         if (!old) return { ok: false, error: '元のコンポが見つかりません（削除されたか、JIZURA のコンポではありません）' };
         var au = C.cutEdit.audioOf(old), job = null, view = null;
         app.beginUndoGroup('JIZURA カット編集: 作り直し');
+        var ex = null;
         try { view = viewerAway(); job = C.start(plan, { roles: roles(C), audioItem: au ? au.item : null, audioStart: au ? au.start : 0 }); }
-        catch (e) { viewerBack(view, old, null); throw e; }
-        finally { app.endUndoGroup(); }
+        catch (e) { ex = e; viewerBack(view, old, null); }
+        app.endUndoGroup();
+        if (ex) throw ex;
         rb = { job: job, plan: plan, old: old, oldName: old.name, opts: opts || {}, t0: new Date().getTime(), audio: !!au, view: view };
         return { ok: true, name: job.comp.name, total: job.total, events: job.events };
     }
@@ -71,14 +73,17 @@
                 job.step(ms > 0 ? ms : 1200);
                 if (job.finished && rb.view && rb.view.tmp && exists(rb.view.tmp)) rb.view.tmp.openInViewer();     // the build's last step opened the new comp
             } catch (e) { err = e.toString() + (e.line ? ' (line ' + e.line + ')' : ''); }
-            finally { app.endUndoGroup(); }
+            app.endUndoGroup();
             if (!err) return { ok: true, done: false, phase: job.finished ? 'stamp' : job.phase, cuts: job.done, total: job.total, eventsDone: job.eventsDone, events: job.events, stepMs: new Date().getTime() - t0 };
         }
         rb = null;
-        var res = null;
+        // (no try / finally around a value: ExtendScript can lose it — the real V-3 got null back from a finished rebuild)
+        var res = null, ex = null;
         app.beginUndoGroup('JIZURA カット編集: 作り直し');
-        try { res = rebuildEnd(C, r, job, err, t0); }
-        finally { viewerBack(r.view, r.old, job.comp); app.endUndoGroup(); }
+        try { res = rebuildEnd(C, r, job, err, t0); } catch (e5) { ex = e5; }
+        try { viewerBack(r.view, r.old, job.comp); } catch (e6) {}
+        app.endUndoGroup();
+        if (ex) throw ex;
         return res;
     }
     function rebuildEnd(C, r, job, err, t0) {
@@ -116,7 +121,7 @@
     JZCEP.cutParts = function () { return out(function (C) { return C.cutEdit.parts(); }); };
     JZCEP.cutSelectLayer = function (compId, uid) { return out(function (C) { return C.cutEdit.selectLayer(compId, uid); }); };
     JZCEP.cutWriteEdit = function (compId, uid, enc) {
-        return out(function (C) { app.beginUndoGroup('JIZURA カット編集: 編集を保存'); try { return C.cutEdit.writeEdit(compId, uid, decodeURIComponent(enc)); } finally { app.endUndoGroup(); } });
+        return out(function (C) { var r, ex = null; app.beginUndoGroup('JIZURA カット編集: 編集を保存'); try { r = C.cutEdit.writeEdit(compId, uid, decodeURIComponent(enc)); } catch (e) { ex = e; } app.endUndoGroup(); if (ex) throw ex; return r; });
     };
     JZCEP.rebuildStartFromFile = function (path, oldId, enc) {
         return out(function (C) { var s = readTemp(path); if (s == null) return { ok: false, error: '構成データの一時ファイルが見つかりません' }; return rebuildStart(C, s, oldId, C.parse(decodeURIComponent(enc || '%7B%7D'))); });
