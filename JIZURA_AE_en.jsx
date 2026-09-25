@@ -30612,12 +30612,12 @@ function jzCEFindItem(id) { for (var i = 1; i <= app.project.numItems; i++) { va
 function jzCEHash36(a, b, c, d) { return jzHash(a, b, c, d).toString(36); }
 
 // wrapper layers of a main comp that carry a cut comment, in layer order: [{L, comp, tag}]
-// (not the copies a transition makes of them: 'JZ Trans \u2026 (prev cut)' and the like have the same source)
+// (not the copies transitions and effect events make of them: 'JZ Trans \u2026 (prev cut)', 'JZ FX radialChroma copy' \u2026 have the same source)
 function jzCEWrappers(comp) {
     var out = [], i, L, t;
     for (i = 1; i <= comp.numLayers; i++) {
         L = comp.layer(i);
-        if (/^JZ Trans /.test(L.name)) continue;
+        if (/^JZ (Trans|FX) /.test(L.name)) continue;
         try { if (!L.source || !jzCEIsComp(L.source)) continue; } catch (e) { continue; }
         t = jzCETag(L.source);
         if (t && t.k === 'cut') out.push({ L: L, comp: L.source, tag: t });

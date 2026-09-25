@@ -190,7 +190,7 @@ const readJ = (JZ, v) => JSON.parse(JZ.JZ_CUTEDIT.json(v));
   if (!r.ok) errs.push('stamp: ' + r.error);
   const h = readJ(JZ, JZ.JZ_CUTEDIT.header(comp.id)), cs = readJ(JZ, JZ.JZ_CUTEDIT.cuts(comp.id));
   if (h.ok && cs.ok) cs.cuts = h.h.cuts.map(u => cs.cuts.find(x => x.uid === u));          // layer order → plan order
-  if (cs.ok && cs.cuts.some(x => { const L = comp._layers.find(l => l.id === x.layerId); return !L || /^JZ Trans /.test(L.name); })) errs.push('cutRead returned a transition copy instead of the wrapper layer');
+  if (cs.ok && cs.cuts.some(x => { const L = comp._layers.find(l => l.id === x.layerId); return !L || /^JZ (Trans|FX) /.test(L.name); })) errs.push('cutRead returned a transition / effect copy instead of the wrapper layer');
   if (!comp._layers.some(L => /^JZ Trans /.test(L.name) && L.source && /"k":"cut"/.test(L.source.comment || ''))) errs.push('(test plan has no transition copies of a wrapper)');
   if (!h.ok || !cs.ok) errs.push('read: ' + (h.error || cs.error));
   else {
