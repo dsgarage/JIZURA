@@ -30259,114 +30259,21 @@ function jzEventsArr(plan, type, t0, t1) {
 // job.phase: 'cuts' -> 'trans' -> 'events' -> 'done'; job.done / job.total = cuts built; job.cancelled = true skips the rest and finishes what exists.
 function jzBuild(plan, opt) { var job = jzBuildStart(plan, opt); while (!job.finished) job.step(null); return job.comp; }
 function jzBuildStart(plan, opt) {
-    opt = opt || {};
-    JZLOG = []; JZ_FALLBACKS = 0; JZ_FALLBACK_KEYS = []; JZ_FONT_MISSING = {}; JZ_FONT_NOAPI = false;
-    jzSetLang(plan.lang || (typeof jzDetectLang === 'function' ? jzDetectLang(plan) : 'ja'));   // \u6B4C\u8A5E\u306E\u8A00\u8A9E \u2192 faces
-    var W = opt.width || plan.width || 1920, H = opt.height || plan.height || 1080, fps = plan.fps || 24, D = Math.max(1, plan.duration || 10);
-    var st = plan.style, fx = plan.fx || {}, roles = opt.roles || JZ_ROLE_DEFAULT;
-    var ghostAmt = (fx.chroma == null ? 0.7 : fx.chroma) * (st.ghost == null ? 1 : st.ghost);
-    var title = String(plan.title || 'lyric').substr(0, 20);
-    var comp = app.project.items.addComp('JIZURA ' + title, W, H, 1, D, fps);
-    // edges uncovered by glitch shifts show the scheme background (the browser redraws over the old frame) instead of black
-    try { comp.bgColor = plan.keyBg ? [0, 0, 0] : jzHex(st.schemes[0].bg); } catch (eb) {}
-    var folder = app.project.items.addFolder('JIZURA ' + title + ' cuts');
-    var u = H / 1080;
-    var schemes = st.schemes, cuts = plan.cuts || [];
-    var FXV = { motion: fx.motion == null ? 0.7 : fx.motion, glitch: fx.glitch == null ? 0.5 : fx.glitch, decor: fx.decor == null ? 0.5 : fx.decor, texture: fx.texture == null ? 0.6 : fx.texture, chroma: fx.chroma == null ? 0.7 : fx.chroma };
-    function schemeOf(c) { return schemes[(c.scheme || 0) % schemes.length] || schemes[0]; }
-    var paperAmt = (st.texture && st.texture.paper) || 0;
-    // \u5408\u6210\u7528\u306E\u80CC\u666F: the plan's style is already white-on-black; no lift / paper / background graphic / vignette,
-    // the finished comp is made monochrome (Tint) and \u2014 for green \u2014 screened onto #00FF00
-    var KEY = (plan.keyBg === 'green' || plan.keyBg === 'black') ? plan.keyBg : null;
-    if (KEY) paperAmt = 0;
+    var E = jzBuildEnv(plan, opt);
+    opt = E.opt;
+    var W = E.W, H = E.H, fps = E.fps, D = E.D, st = E.st, fx = E.fx, roles = E.roles, comp = E.comp, u = E.u, schemes = E.schemes, cuts = E.cuts, FXV = E.FXV,
+        schemeOf = E.schemeOf, KEY = E.KEY;
 
     // ---------- base background (visible between cuts)
     var base = comp.layers.addSolid(jzHex(schemes[0].bg), 'JZ Background', W, H, 1, D);
     if (!KEY) jzBgLift(base, schemes[0], W, H);
 
     // ---------- cuts
-    var lagA = 0.8 / 24, lagB = 1.6 / 24, wraps = [];
-    function buildCut(ci) {
-        var cut = cuts[ci];
-        if (!(cut.end > cut.start)) return;
-        cut.dur = cut.end - cut.start;
-        var sc = schemeOf(cut), label = jzPad(ci + 1, 3) + ' ' + String(cut.text || cut.layout).substr(0, 16);
-        var cdur = Math.max(cut.dur, 1 / fps) + 1.0;
-        // content
-        var pc = app.project.items.addComp(label + ' text', W, H, 1, cdur, fps);
-        pc.parentFolder = folder;
-        var ctx = { comp: pc, W: W, H: H, u: u, sc: sc, st: st, fx: FXV, cut: cut, P: cut.params || {}, roles: roles, plan: plan };
-        var bb = null, lk = jzFallback('layout', cut.layout, 'center');
-        if (lk !== cut.layout) { ctx.P = JZ_REG.layout[lk].plan ? JZ_REG.layout[lk].plan(new JzRng(jzHash(cut.seed, 31)), { text: cut.text, n: jzCount(cut.text), W: W, H: H, dur: cut.dur }, st) : {}; }
-        try { bb = JZ_REG.layout[lk].build(ctx); }
-        catch (e) { jzWarn('cut ' + (ci + 1) + ' ' + lk + ': ' + e.toString() + (e.line ? ' (line ' + e.line + ')' : '')); }
-        try { jzDecorate(ctx, bb); } catch (e2) { jzWarn('decor: ' + e2.toString()); }
-        // wrapper
-        var wc = app.project.items.addComp(label, W, H, 1, cdur, fps);
-        wc.parentFolder = folder;
-        var bgL = wc.layers.addSolid(jzHex(sc.bg), 'JZ BG', W, H, 1, cdur);
-        if (!KEY) jzBgLift(bgL, sc, W, H);
-        if (paperAmt > 0.05 && FXV.texture > 0.05) {
-            var pp = wc.layers.addSolid([0.5, 0.5, 0.5], 'JZ Paper', W, H, 1, cdur);
-            var pn = jzEffect(pp, 'ADBE Fractal Noise', 'JZ Paper Noise'); jzEP(pn, 4, 60);
-            // the browser's paper is a faint fibre texture: keep the overlay light, fainter still on dark schemes
-            pp.blendingMode = BlendingMode.OVERLAY; jzXf(pp, 'ADBE Opacity').setValue((jzLum(sc.bg) < 0.4 ? 6 : 12) * paperAmt);
-        }
-        var bk = !KEY && cut.bg && cut.bg !== 'none' ? jzFallback('bg', cut.bg, null) : null;
-        if (bk) {
-            var bctx = { comp: wc, W: W, H: H, u: u, sc: sc, st: st, fx: FXV, cut: cut, plan: plan, P: cut.bgP || {} };
-            try { JZ_REG.bg[bk].build(bctx, bctx.P); } catch (e3) { jzWarn('bg ' + bk + ': ' + e3.toString() + (e3.line ? ' (line ' + e3.line + ')' : '')); }
-        }
-        var CL = wc.layers.add(pc); CL.name = 'content'; CL.startTime = 0;
-        var content = [CL];
-        if (ghostAmt > 0.02 && opt.ghosts !== false) {
-            // layers marked with jzNoGhost() stay out of the ghosts: feed them from a copy of the content comp with those layers off
-            var gsrc = null, li;
-            for (li = 1; li <= pc.numLayers; li++) if (jzIsNoGhost(pc.layer(li))) { gsrc = pc; break; }
-            if (gsrc) {
-                try {
-                    gsrc = pc.duplicate(); gsrc.name = label + ' ghost'; gsrc.parentFolder = folder;
-                    jzTidyComp(gsrc, true);          // drop the main-pass-only layers (keeps what the ghosted layers still need)
-                } catch (eg) { gsrc = null; jzWarn('ghost copy: ' + eg.toString()); }
-            }
-            var ghosts = [['B', lagB, [-3.4, -1.3], sc.ghostB], ['A', lagA, [3.2, 1.9], sc.ghostA]];
-            for (var g = 0; g < ghosts.length; g++) {
-                var G = gsrc ? wc.layers.add(gsrc) : CL.duplicate();
-                G.name = 'ghost ' + ghosts[g][0];
-                G.startTime = ghosts[g][1]; G.inPoint = 0; G.outPoint = cdur;
-                G.moveAfter(CL);
-                var tint = jzEffect(G, 'ADBE Tint', 'JZ Ghost Colour');
-                jzEP(tint, 1, jzHex(ghosts[g][3])); jzEP(tint, 2, jzHex(ghosts[g][3])); jzEP(tint, 3, 100);
-                if (jzLum(sc.bg) > 0.55) G.blendingMode = BlendingMode.MULTIPLY;
-                var off = ghosts[g][2];
-                jzSetExpr(jzXf(G, 'ADBE Position'), 'var T0=' + jzN(cut.start) + ',ev=' + jzEventsArr(plan, 'chroma', cut.start, cut.end) + ';var s=1;for(var i=0;i<ev.length;i++){var dt=(time+T0-ev[i][0])*24;if(dt>=0&&dt<14)s+=ev[i][1]*Math.pow(0.55,dt);}' +
-                    'var k=' + jzN(ghostAmt * u) + '*s;[value[0]+' + off[0] + '*k,value[1]+' + off[1] + '*k]');
-                content.push(G);
-            }
-        }
-        // camera: a null at the comp centre (identity transform) that carries the content and its ghosts
-        var nul = wc.layers.addNull(cdur); nul.name = 'JZ Camera';
-        jzXf(nul, 'ADBE Anchor Point').setValue([W / 2, H / 2]); jzXf(nul, 'ADBE Position').setValue([W / 2, H / 2]);
-        for (var q = 0; q < content.length; q++) content[q].parent = nul;
-        var ck = jzFallback('cam', cut.cam || 'push', 'push');
-        try { JZ_REG.cam[ck].apply({ ctx: ctx, comp: wc, nul: nul, content: content, P: cut.camP || {}, W: W, H: H, u: u, cut: cut, fx: FXV, sc: sc }, cut.camP || {}); }
-        catch (e4) { jzWarn('cam ' + ck + ': ' + e4.toString() + (e4.line ? ' (line ' + e4.line + ')' : '')); }
-        // into the main comp
-        var WL = comp.layers.add(wc);
-        WL.startTime = cut.start; WL.inPoint = cut.start; WL.outPoint = cut.end;
-        WL.name = (jzPad(ci + 1, 3) + ' ' + (cut.text || '')).substr(0, 24);
-        wraps.push({ cut: cut, layer: WL, comp: wc, sc: sc });
-    }
+    var wraps = [];
+    function buildCut(ci) { var w = jzBuildCut(E, cuts[ci], ci); if (w) wraps.push(w); }
     function finishTrans() {
         // ---------- cut-to-cut transitions (the previous wrapper holds its last state under the new one)
-        for (var wi = 1; wi < wraps.length; wi++) {
-            var B = wraps[wi], A = wraps[wi - 1], tk = B.cut.trans ? jzFallback('trans', B.cut.trans, null) : null;
-            if (!tk || Math.abs(A.cut.end - B.cut.start) > 0.06) continue;
-            var td = jzClamp(B.cut.transDur || jzMeta('trans', tk).dur || 0.35, 0.08, Math.max(0.1, B.cut.dur * 0.6));
-            A.layer.outPoint = B.cut.start + td;
-            var tctx = { comp: comp, W: W, H: H, u: u, A: A.layer, B: B.layer, t0: B.cut.start, dur: td, P: B.cut.transP || {}, sc: B.sc, scPrev: A.sc, st: st, fx: FXV, cut: B.cut, prev: A.cut, fps: fps };
-            try { JZ_REG.trans[tk].build(tctx); } catch (e5) { jzWarn('trans ' + tk + ': ' + e5.toString() + (e5.line ? ' (line ' + e5.line + ')' : '')); }
-        }
+        for (var wi = 1; wi < wraps.length; wi++) jzBuildTrans(E, wraps[wi - 1], wraps[wi]);
 
         // ---------- HUD
         if (plan.hud && opt.hud !== false) jzHUD(comp, plan, schemes[0], roles);
@@ -30439,6 +30346,120 @@ function jzBuildStart(plan, opt) {
         return job;
     };
     return job;
+}
+// what every part of a build shares (sizes, style, strengths, the comp and its cuts folder). inComp / inFolder: build into these
+// instead of new ones (the cut editor rebuilds one cut in an existing comp)
+function jzBuildEnv(plan, opt, inComp, inFolder) {
+    opt = opt || {};
+    JZLOG = []; JZ_FALLBACKS = 0; JZ_FALLBACK_KEYS = []; JZ_FONT_MISSING = {}; JZ_FONT_NOAPI = false;
+    jzSetLang(plan.lang || (typeof jzDetectLang === 'function' ? jzDetectLang(plan) : 'ja'));   // \u6B4C\u8A5E\u306E\u8A00\u8A9E \u2192 faces
+    var W = opt.width || plan.width || 1920, H = opt.height || plan.height || 1080, fps = plan.fps || 24, D = Math.max(1, plan.duration || 10);
+    var st = plan.style, fx = plan.fx || {}, roles = opt.roles || JZ_ROLE_DEFAULT;
+    var ghostAmt = (fx.chroma == null ? 0.7 : fx.chroma) * (st.ghost == null ? 1 : st.ghost);
+    var title = String(plan.title || 'lyric').substr(0, 20);
+    var comp = inComp || app.project.items.addComp('JIZURA ' + title, W, H, 1, D, fps);
+    // edges uncovered by glitch shifts show the scheme background (the browser redraws over the old frame) instead of black
+    if (!inComp) try { comp.bgColor = plan.keyBg ? [0, 0, 0] : jzHex(st.schemes[0].bg); } catch (eb) {}
+    var folder = inFolder || app.project.items.addFolder('JIZURA ' + title + ' cuts');
+    var u = H / 1080;
+    var schemes = st.schemes, cuts = plan.cuts || [];
+    var FXV = { motion: fx.motion == null ? 0.7 : fx.motion, glitch: fx.glitch == null ? 0.5 : fx.glitch, decor: fx.decor == null ? 0.5 : fx.decor, texture: fx.texture == null ? 0.6 : fx.texture, chroma: fx.chroma == null ? 0.7 : fx.chroma };
+    function schemeOf(c) { return schemes[(c.scheme || 0) % schemes.length] || schemes[0]; }
+    var paperAmt = (st.texture && st.texture.paper) || 0;
+    // \u5408\u6210\u7528\u306E\u80CC\u666F: the plan's style is already white-on-black; no lift / paper / background graphic / vignette,
+    // the finished comp is made monochrome (Tint) and \u2014 for green \u2014 screened onto #00FF00
+    var KEY = (plan.keyBg === 'green' || plan.keyBg === 'black') ? plan.keyBg : null;
+    if (KEY) paperAmt = 0;
+
+    var lagA = 0.8 / 24, lagB = 1.6 / 24;
+    return { plan: plan, opt: opt, W: W, H: H, fps: fps, D: D, st: st, fx: fx, roles: roles, ghostAmt: ghostAmt, comp: comp, folder: folder, u: u, schemes: schemes, cuts: cuts,
+        FXV: FXV, schemeOf: schemeOf, paperAmt: paperAmt, KEY: KEY, lagA: lagA, lagB: lagB };
+}
+// one cut: its content / wrapper comps and its layer in the main comp. ci = the cut's number (names: 001 \u2026). Returns {cut, layer, comp, sc}
+function jzBuildCut(E, cut, ci) {
+    var plan = E.plan, opt = E.opt, W = E.W, H = E.H, fps = E.fps, st = E.st, roles = E.roles, comp = E.comp, folder = E.folder, u = E.u, FXV = E.FXV,
+        schemeOf = E.schemeOf, paperAmt = E.paperAmt, KEY = E.KEY, lagA = E.lagA, lagB = E.lagB;
+    if (!(cut.end > cut.start)) return null;
+    cut.dur = cut.end - cut.start;
+    var sc = schemeOf(cut), label = jzPad(ci + 1, 3) + ' ' + String(cut.text || cut.layout).substr(0, 16);
+    var CX = jzCutCtx(cut, st, FXV, sc);        // per-cut style / strengths / scheme (cut.ov from the cut editor); none: the same values
+    sc = CX.sc;
+    var cdur = Math.max(cut.dur, 1 / fps) + 1.0;
+    // content
+    var pc = app.project.items.addComp(label + ' text', W, H, 1, cdur, fps);
+    pc.parentFolder = folder;
+    var ctx = { comp: pc, W: W, H: H, u: u, sc: sc, st: CX.st, fx: CX.fx, cut: cut, P: cut.params || {}, roles: roles, plan: plan };
+    var bb = null, lk = jzFallback('layout', cut.layout, 'center');
+    if (lk !== cut.layout) { ctx.P = JZ_REG.layout[lk].plan ? JZ_REG.layout[lk].plan(new JzRng(jzHash(cut.seed, 31)), { text: cut.text, n: jzCount(cut.text), W: W, H: H, dur: cut.dur }, st) : {}; }
+    try { bb = JZ_REG.layout[lk].build(ctx); }
+    catch (e) { jzWarn('cut ' + (ci + 1) + ' ' + lk + ': ' + e.toString() + (e.line ? ' (line ' + e.line + ')' : '')); }
+    try { jzDecorate(ctx, bb); } catch (e2) { jzWarn('decor: ' + e2.toString()); }
+    // wrapper
+    var wc = app.project.items.addComp(label, W, H, 1, cdur, fps);
+    wc.parentFolder = folder;
+    var bgL = wc.layers.addSolid(jzHex(sc.bg), 'JZ BG', W, H, 1, cdur);
+    if (!KEY) jzBgLift(bgL, sc, W, H);
+    if (paperAmt > 0.05 && CX.fx.texture > 0.05) {
+        var pp = wc.layers.addSolid([0.5, 0.5, 0.5], 'JZ Paper', W, H, 1, cdur);
+        var pn = jzEffect(pp, 'ADBE Fractal Noise', 'JZ Paper Noise'); jzEP(pn, 4, 60);
+        // the browser's paper is a faint fibre texture: keep the overlay light, fainter still on dark schemes
+        pp.blendingMode = BlendingMode.OVERLAY; jzXf(pp, 'ADBE Opacity').setValue((jzLum(sc.bg) < 0.4 ? 6 : 12) * paperAmt);
+    }
+    var bk = !KEY && cut.bg && cut.bg !== 'none' ? jzFallback('bg', cut.bg, null) : null;
+    if (bk) {
+        var bctx = { comp: wc, W: W, H: H, u: u, sc: sc, st: CX.st, fx: CX.fx, cut: cut, plan: plan, P: cut.bgP || {} };
+        try { JZ_REG.bg[bk].build(bctx, bctx.P); } catch (e3) { jzWarn('bg ' + bk + ': ' + e3.toString() + (e3.line ? ' (line ' + e3.line + ')' : '')); }
+    }
+    var CL = wc.layers.add(pc); CL.name = 'content'; CL.startTime = 0;
+    var content = [CL];
+    if (CX.ghostAmt > 0.02 && opt.ghosts !== false) {
+        // layers marked with jzNoGhost() stay out of the ghosts: feed them from a copy of the content comp with those layers off
+        var gsrc = null, li;
+        for (li = 1; li <= pc.numLayers; li++) if (jzIsNoGhost(pc.layer(li))) { gsrc = pc; break; }
+        if (gsrc) {
+            try {
+                gsrc = pc.duplicate(); gsrc.name = label + ' ghost'; gsrc.parentFolder = folder;
+                jzTidyComp(gsrc, true);          // drop the main-pass-only layers (keeps what the ghosted layers still need)
+            } catch (eg) { gsrc = null; jzWarn('ghost copy: ' + eg.toString()); }
+        }
+        var ghosts = [['B', lagB, [-3.4, -1.3], sc.ghostB], ['A', lagA, [3.2, 1.9], sc.ghostA]];
+        for (var g = 0; g < ghosts.length; g++) {
+            var G = gsrc ? wc.layers.add(gsrc) : CL.duplicate();
+            G.name = 'ghost ' + ghosts[g][0];
+            G.startTime = ghosts[g][1]; G.inPoint = 0; G.outPoint = cdur;
+            G.moveAfter(CL);
+            var tint = jzEffect(G, 'ADBE Tint', 'JZ Ghost Colour');
+            jzEP(tint, 1, jzHex(ghosts[g][3])); jzEP(tint, 2, jzHex(ghosts[g][3])); jzEP(tint, 3, 100);
+            if (jzLum(sc.bg) > 0.55) G.blendingMode = BlendingMode.MULTIPLY;
+            var off = ghosts[g][2];
+            jzSetExpr(jzXf(G, 'ADBE Position'), 'var T0=' + jzN(cut.start) + ',ev=' + jzEventsArr(plan, 'chroma', cut.start, cut.end) + ';var s=1;for(var i=0;i<ev.length;i++){var dt=(time+T0-ev[i][0])*24;if(dt>=0&&dt<14)s+=ev[i][1]*Math.pow(0.55,dt);}' +
+                'var k=' + jzN(CX.ghostAmt * u) + '*s;[value[0]+' + off[0] + '*k,value[1]+' + off[1] + '*k]');
+            content.push(G);
+        }
+    }
+    // camera: a null at the comp centre (identity transform) that carries the content and its ghosts
+    var nul = wc.layers.addNull(cdur); nul.name = 'JZ Camera';
+    jzXf(nul, 'ADBE Anchor Point').setValue([W / 2, H / 2]); jzXf(nul, 'ADBE Position').setValue([W / 2, H / 2]);
+    for (var q = 0; q < content.length; q++) content[q].parent = nul;
+    var ck = jzFallback('cam', cut.cam || 'push', 'push');
+    try { JZ_REG.cam[ck].apply({ ctx: ctx, comp: wc, nul: nul, content: content, P: cut.camP || {}, W: W, H: H, u: u, cut: cut, fx: CX.fx, sc: sc }, cut.camP || {}); }
+    catch (e4) { jzWarn('cam ' + ck + ': ' + e4.toString() + (e4.line ? ' (line ' + e4.line + ')' : '')); }
+    // into the main comp
+    var WL = comp.layers.add(wc);
+    WL.startTime = cut.start; WL.inPoint = cut.start; WL.outPoint = cut.end;
+    WL.name = (jzPad(ci + 1, 3) + ' ' + (cut.text || '')).substr(0, 24);
+    return { cut: cut, layer: WL, comp: wc, sc: sc };
+}
+// the transition from wrapper A = {cut, layer, comp, sc} to the next one B (when B's cut has one and follows A directly). Returns true when built
+function jzBuildTrans(E, A, B) {
+    var comp = E.comp, W = E.W, H = E.H, u = E.u, st = E.st, FXV = E.FXV, fps = E.fps;
+    var tk = B.cut.trans ? jzFallback('trans', B.cut.trans, null) : null;
+    if (!tk || Math.abs(A.cut.end - B.cut.start) > 0.06) return false;
+    var td = jzClamp(B.cut.transDur || jzMeta('trans', tk).dur || 0.35, 0.08, Math.max(0.1, B.cut.dur * 0.6));
+    A.layer.outPoint = B.cut.start + td;
+    var tctx = { comp: comp, W: W, H: H, u: u, A: A.layer, B: B.layer, t0: B.cut.start, dur: td, P: B.cut.transP || {}, sc: B.sc, scPrev: A.sc, st: st, fx: FXV, cut: B.cut, prev: A.cut, fps: fps };
+    try { JZ_REG.trans[tk].build(tctx); } catch (e5) { jzWarn('trans ' + tk + ': ' + e5.toString() + (e5.line ? ' (line ' + e5.line + ')' : '')); }
+    return true;
 }
 function jzCutAtTime(cuts, t) { for (var i = cuts.length - 1; i >= 0; i--) if (t >= cuts[i].start - 1e-6 && t < cuts[i].end) return cuts[i]; return null; }
 // scheme background: radial "lift" like the browser (Gradient Ramp on the solid)
@@ -30517,6 +30538,401 @@ function jzTidyTree(comp) {
         for (i = 1; i <= C.numLayers; i++) { L = C.layer(i); try { if (L.source && L.source instanceof CompItem) todo.push(L.source); } catch (e) {} }
     }
 }
+
+// ================================================================ cut editor (CEP panel "\u30AB\u30C3\u30C8\u7DE8\u96C6" tab)
+// docs/dsgarage/CUT_EDIT_SPEC.md. The plan of a built comp is kept in the comments of the items it made, so the panel can
+// read a cut back from the layer selected in the timeline, edit it and rebuild:
+//   main comp     'JZ1 ' + header {jz, k:'main', uid, chunks, plan (no cuts / events), project, cuts:[uid\u2026], engine}
+//                 (a header over JZ_CE_LIMIT bytes goes on in the cuts folder: 'JZ1 {\u2026"k":"main2"\u2026}\n' + the rest)
+//   wrapper comp  'JZ1 ' + {jz, k:'cut', uid, main, i, base (the cut as generated), edit (the panel's overrides), ev (nearby events), sc, fx}
+//   content / ghost comps  'JZ1 ' + {jz, k:'content' | 'ghost', uid (the cut's)}
+// Text a user wrote in a comment before the 'JZ1 ' line is kept. Everything written is ASCII (\uXXXX escapes).
+var JZ_CE_LIMIT = 14000;           // bytes per comment we allow ourselves (After Effects: 15,999)
+var JZ_CE_MARK = 'JZ1 ';
+
+// per-cut overrides of the style / strengths / scheme (cut.ov = {fonts, colors, fx}, made by the panel from the cut's edit).
+// No cut.ov: the same objects come back, so a plain plan builds exactly as before.
+function jzCutCtx(cut, st, FXV, sc) {
+    var ov = cut && cut.ov, o = { st: st, fx: FXV, sc: sc }, i, k, c, s;
+    if (ov && ov.fonts) {
+        var roles = ['display', 'serif', 'body'], f = null;
+        for (i = 0; i < roles.length; i++) if (ov.fonts[roles[i]]) { if (!f) { o.st = jzCopy(st); f = o.st.fonts = jzCopy(st.fonts); } f[roles[i]] = [String(ov.fonts[roles[i]])]; }
+    }
+    if (ov && ov.fx) {
+        var ks = ['motion', 'glitch', 'chroma', 'texture'];
+        for (i = 0; i < ks.length; i++) { k = ks[i]; if (typeof ov.fx[k] === 'number') { if (o.fx === FXV) o.fx = jzCopy(FXV); o.fx[k] = jzClamp(ov.fx[k], 0, 1); } }
+    }
+    // colours: this cut's scheme, the same rules as the browser's resolveStyle (bg / fg / sub first, then accent + ghosts fitted to the new bg).
+    // \u5408\u6210\u7528\u306E\u80CC\u666F keeps its white-on-black.
+    c = ov && ov.colors;
+    if (c && !st.key && (c.enabled || c.accentOn)) {
+        s = jzCopy(sc);
+        if (c.enabled) { var bk = ['bg', 'fg', 'sub']; for (i = 0; i < bk.length; i++) if (jzCleanHex(c[bk[i]])) s[bk[i]] = jzCleanHex(c[bk[i]]); }
+        if (c.accentOn) {
+            var acc = jzCleanHex(c.accent), gA = jzCleanHex(c.ghostA), gB = jzCleanHex(c.ghostB);
+            if (acc) { s.accent = jzFitContrast(acc, s.bg, 2.4); if (sc.ink === sc.accent) s.ink = s.accent; if (sc.grad) s.grad = [jzFitContrast(acc, s.bg, 2.4), jzMixHex(acc, '#000000', 0.7)]; }
+            if (gA) s.ghostA = jzFitContrast(gA, s.bg, 1.35);
+            if (gB) s.ghostB = jzFitContrast(gB, s.bg, 1.35);
+        }
+        o.sc = s;
+    }
+    o.ghostAmt = o.fx.chroma * (o.st.ghost == null ? 1 : o.st.ghost);
+    return o;
+}
+
+// ---------------------------------------------------------------- JSON writer (ExtendScript has no JSON object)
+// {__jzRaw: '\u2026'} is written as-is (JSON text read from a comment, passed through without parsing)
+function jzCEQuote(s) {
+    s = String(s); var out = '"', i, c, ch;
+    for (i = 0; i < s.length; i++) {
+        ch = s.charAt(i); c = s.charCodeAt(i);
+        if (ch === '"' || ch === '\\') out += '\\' + ch;
+        else if (c < 32 || c > 126) out += '\\u' + ('0000' + c.toString(16)).slice(-4);
+        else out += ch;
+    }
+    return out + '"';
+}
+function jzCEStr(v) {
+    var t = typeof v, a, i, k;
+    if (v === null || v === undefined) return 'null';
+    if (t === 'number') return isFinite(v) ? String(v) : 'null';
+    if (t === 'boolean') return v ? 'true' : 'false';
+    if (t === 'string') return jzCEQuote(v);
+    if (t === 'function') return 'null';
+    if (v.__jzRaw !== undefined) return String(v.__jzRaw);
+    if (v instanceof Array) { a = []; for (i = 0; i < v.length; i++) a.push(jzCEStr(v[i])); return '[' + a.join(',') + ']'; }
+    a = []; for (k in v) if (v.hasOwnProperty(k) && v[k] !== undefined) a.push(jzCEQuote(k) + ':' + jzCEStr(v[k]));
+    return '{' + a.join(',') + '}';
+}
+
+// ---------------------------------------------------------------- comments
+// the JIZURA part of a comment: {pre: user's text before it, body: after 'JZ1 '} or null
+function jzCEPart(item) {
+    var s = ''; try { s = String(item.comment || ''); } catch (e) { return null; }
+    var i = s.indexOf(JZ_CE_MARK) === 0 ? 0 : s.indexOf('\n' + JZ_CE_MARK);
+    if (i < 0) return null;
+    if (i > 0) i++;
+    return { pre: s.substr(0, i), body: s.substr(i + JZ_CE_MARK.length) };
+}
+// kind / uid / main uid from the start of the JSON (no parse; the header can be 14 KB)
+function jzCETag(item) {
+    var p = jzCEPart(item); if (!p) return null;
+    var m = /^\{"jz":1,"k":"([a-z0-9]+)","uid":"([^"]*)"(?:,"main":"([^"]*)")?/.exec(p.body.substr(0, 200));
+    return m ? { k: m[1], uid: m[2], main: m[3] || null } : null;
+}
+function jzCEWrite(item, body) {
+    var p = jzCEPart(item), pre = '';
+    if (p) pre = p.pre;
+    else { try { pre = String(item.comment || ''); } catch (e) { pre = ''; } if (pre) pre += '\n'; }
+    item.comment = pre + JZ_CE_MARK + body;
+}
+function jzCEIsComp(it) { try { return it instanceof CompItem; } catch (e) { return false; } }
+function jzCEFindItem(id) { for (var i = 1; i <= app.project.numItems; i++) { var it = app.project.item(i); if (it.id === id) return it; } return null; }
+function jzCEHash36(a, b, c, d) { return jzHash(a, b, c, d).toString(36); }
+
+// wrapper layers of a main comp that carry a cut comment, in layer order: [{L, comp, tag}]
+// (not the copies transitions and effect events make of them: 'JZ Trans \u2026 (prev cut)', 'JZ FX radialChroma copy' \u2026 have the same source)
+function jzCEWrappers(comp) {
+    var out = [], i, L, t;
+    for (i = 1; i <= comp.numLayers; i++) {
+        L = comp.layer(i);
+        if (/^JZ (Trans|FX) /.test(L.name)) continue;
+        try { if (!L.source || !jzCEIsComp(L.source)) continue; } catch (e) { continue; }
+        t = jzCETag(L.source);
+        if (t && t.k === 'cut') out.push({ L: L, comp: L.source, tag: t });
+    }
+    return out;
+}
+// the full header JSON text of a main comp (joins the cuts folder's continuation), or null
+function jzCEHeaderText(comp) {
+    var p = jzCEPart(comp); if (!p) return null;
+    var nl = p.body.indexOf('\n');
+    if (nl < 0) return p.body;
+    var head = jzParseJSON(p.body.substr(0, nl)), rest = p.body.substr(nl + 1);
+    if (!(head.chunks > 1)) return rest;
+    var W = jzCEWrappers(comp), f = null, q, qn;
+    for (var i = 0; i < W.length && !f; i++) { try { f = W[i].comp.parentFolder; } catch (e) { f = null; } }
+    q = f ? jzCEPart(f) : null;
+    if (!q) return null;
+    qn = q.body.indexOf('\n');
+    if (qn < 0 || jzParseJSON(q.body.substr(0, qn)).uid !== head.uid) return null;
+    return rest + q.body.substr(qn + 1);
+}
+
+// ---------------------------------------------------------------- stamp: write the plan into a freshly built comp
+// plan.__project = the browser project (optional), plan.__cutedit = {cuts: [{base, edit}]} parallel to plan.cuts (a rebuild).
+function jzCEStamp(comp, plan, extra) {
+    extra = extra || {};
+    var notes = [], cuts = plan.cuts || [], i, k;
+    var uid = 'm-' + jzCEHash36(plan.seed, plan.title, new Date().getTime(), Math.random());
+    // wrapper layers of this build, matched to the plan's cuts by number (the layer name / comp name start with it) and start time
+    var W = jzCEWrappers0(comp), byCut = [], folder = null, uids = [];
+    for (i = 0; i < cuts.length; i++) {
+        var pre = jzPad(i + 1, 3) + ' ', w = null;
+        for (k = 0; k < W.length; k++) if (!W[k].used && W[k].comp.name.substr(0, 4) === pre && Math.abs(W[k].L.startTime - cuts[i].start) < 1e-4) { w = W[k]; w.used = true; break; }
+        byCut.push(w);
+    }
+    for (i = 0; i < cuts.length; i++) {
+        var w2 = byCut[i]; if (!w2) continue;
+        var cuid = 'c-' + jzCEHash36(uid, i, cuts[i].start);
+        if (!jzCEStampCut(w2.comp, plan, i, cuid, uid, notes)) continue;
+        if (!folder) { try { folder = w2.comp.parentFolder; } catch (ef) { folder = null; } }
+        uids.push(cuid);
+    }
+    // header: the plan without cuts / events / what the panel rebuilds anyway
+    var hp = {};
+    for (k in plan) if (plan.hasOwnProperty(k) && !/^(cuts|events|fontTable|fonts|beats|energy|energyRate|__project|__cutedit)$/.test(k)) hp[k] = plan[k];
+    // lines: no chunks; a line's text / index are left out when a cut carries the same text (cut.lineText, cut.line) \u2014 the panel puts them back
+    if (plan.lines) {
+        var lt = {}; for (i = 0; i < cuts.length; i++) if (cuts[i].layout !== 'interlude' && cuts[i].line != null && !lt.hasOwnProperty('l' + cuts[i].line)) lt['l' + cuts[i].line] = cuts[i].lineText;
+        hp.lines = [];
+        for (i = 0; i < plan.lines.length; i++) {
+            var l2 = jzCopy(plan.lines[i]); delete l2.chunks;
+            if (l2.index === i) delete l2.index;
+            if (lt.hasOwnProperty('l' + i) && lt['l' + i] === l2.text) delete l2.text;
+            hp.lines.push(l2);
+        }
+    }
+    var engine = { ae: String(app.version), core: 3, panel: typeof JZ_PANEL_VERSION === 'string' ? JZ_PANEL_VERSION : '' };
+    var H = { jz: 1, k: 'main', uid: uid, v: 1, plan: hp, project: plan.__project || null, cuts: uids, engine: engine };
+    var text = jzCEStr(H);
+    if (text.length > JZ_CE_LIMIT * 2 && H.project) { H.project = null; text = jzCEStr(H); notes.push('\u6B4C\u8A5E\u304C\u9577\u3044\u305F\u3081\u3001\u30D1\u30CD\u30EB\u3078\u306E\u8AAD\u307F\u623B\u3057\u7528\u306E\u8A2D\u5B9A\u306F\u4FDD\u5B58\u3057\u307E\u305B\u3093\u3067\u3057\u305F\uFF08\u4F5C\u308A\u76F4\u3057\u306F\u3067\u304D\u307E\u3059\uFF09'); }
+    var err = jzCEWriteHeader(comp, folder, uid, text);
+    if (err) return { ok: false, error: err, notes: notes };
+    return { ok: true, uid: uid, cuts: uids.length, of: cuts.length, bytes: text.length, chunks: text.length <= JZ_CE_LIMIT ? 1 : 2, notes: notes };
+}
+// the cut comment of wrapper comp wc (plan.cuts[i]; base / edit from plan.__cutedit when the panel sent them) + the content / ghost tags
+function jzCEStampCut(wc, plan, i, cuid, mainUid, notes) {
+    var ce = plan.__cutedit && plan.__cutedit.cuts ? plan.__cutedit.cuts[i] : null, cut = plan.cuts[i], k;
+    var base = ce ? ce.base : cut, edit = ce ? (ce.edit || {}) : {}, schemes = plan.style.schemes;
+    var ev = [], evs = plan.events || [];
+    for (k = 0; k < evs.length; k++) if (evs[k].t >= cut.start - 0.7 && evs[k].t <= cut.end) ev.push(evs[k]);
+    var bcopy = jzCopy(base); delete bcopy.ov;
+    var rec = { jz: 1, k: 'cut', uid: cuid, main: mainUid, i: i, base: bcopy, edit: edit, ev: ev, sc: schemes[(base.scheme || 0) % schemes.length] || schemes[0], fx: plan.fx || {} };
+    var body = jzCEStr(rec);
+    if (body.length > JZ_CE_LIMIT) { rec.ev = []; body = jzCEStr(rec); notes.push('cut ' + (i + 1) + ': \u52B9\u679C\u30A4\u30D9\u30F3\u30C8\u3092\u4FDD\u5B58\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F\uFF08\u5927\u304D\u3059\u304E\u307E\u3059\uFF09'); }
+    if (body.length > JZ_CE_LIMIT) { notes.push('cut ' + (i + 1) + ': \u69CB\u6210\u304C\u5927\u304D\u3059\u304E\u3066\u4FDD\u5B58\u3067\u304D\u307E\u305B\u3093'); return false; }
+    jzCEWrite(wc, body);
+    var tagC = jzCEStr({ jz: 1, k: 'content', uid: cuid }), tagG = jzCEStr({ jz: 1, k: 'ghost', uid: cuid });
+    for (k = 1; k <= wc.numLayers; k++) {
+        var L = wc.layer(k), S = null;
+        try { S = L.source && jzCEIsComp(L.source) ? L.source : null; } catch (e) { S = null; }
+        if (!S) continue;
+        if (L.name === 'content') jzCEWrite(S, tagC);
+        else if (/ ghost$/.test(S.name) && !jzCETag(S)) jzCEWrite(S, tagG);
+    }
+    return true;
+}
+// header text into the main comp (and the cuts folder when it does not fit one comment); an error message or null
+function jzCEWriteHeader(comp, folder, uid, text) {
+    if (text.length > JZ_CE_LIMIT * 2) return '\u69CB\u6210\u304C\u5927\u304D\u3059\u304E\u3066\u4FDD\u5B58\u3067\u304D\u307E\u305B\u3093\uFF08' + text.length + ' \u30D0\u30A4\u30C8\uFF09';
+    if (text.length <= JZ_CE_LIMIT) { jzCEWrite(comp, text); return null; }
+    if (!folder) return '\u69CB\u6210\u306E\u7D9A\u304D\u3092\u66F8\u304F cuts \u30D5\u30A9\u30EB\u30C0\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093';
+    var cut1 = JZ_CE_LIMIT - 100;
+    jzCEWrite(comp, jzCEStr({ jz: 1, k: 'main', uid: uid, chunks: 2 }) + '\n' + text.substr(0, cut1));
+    jzCEWrite(folder, jzCEStr({ jz: 1, k: 'main2', uid: uid, seq: 2 }) + '\n' + text.substr(cut1));
+    return null;
+}
+// wrapper layers of a just-built main comp (no comments yet): precomp layers whose comp contains a 'content' layer
+function jzCEWrappers0(comp) {
+    var out = [], i, L;
+    for (i = 1; i <= comp.numLayers; i++) {
+        L = comp.layer(i);
+        try { if (!L.source || !jzCEIsComp(L.source)) continue; } catch (e) { continue; }
+        var has = false; for (var j = 1; j <= L.source.numLayers && !has; j++) if (L.source.layer(j).name === 'content') has = true;
+        if (has) out.push({ L: L, comp: L.source });
+    }
+    return out;
+}
+
+// ---------------------------------------------------------------- reading back
+function jzCEMainOf(item, mainUid) {       // the main comp that uses this wrapper comp
+    var u = [], i; try { u = item.usedIn; } catch (e) { u = []; }
+    for (i = 0; i < u.length; i++) { var t = jzCETag(u[i]); if (t && t.k === 'main' && (!mainUid || t.uid === mainUid)) return u[i]; }
+    for (i = 0; i < u.length; i++) { var t2 = jzCETag(u[i]); if (t2 && t2.k === 'main') return u[i]; }
+    return null;
+}
+function jzCELayerOf(main, wc) { for (var i = 1; i <= main.numLayers; i++) { try { if (main.layer(i).source === wc) return main.layer(i); } catch (e) {} } return null; }
+function jzCECutInfo(main, L, wc, why) {
+    var p = jzCEPart(wc), t = jzCETag(wc), lid = null;
+    try { lid = L.id; } catch (e) { lid = null; }
+    return { ok: true, why: why, compId: main.id, compName: main.name, uid: t.uid, main: t.main, layerId: lid, layerIndex: L.index,
+        timeline: { startTime: L.startTime, inPoint: L.inPoint, outPoint: L.outPoint }, cut: { __jzRaw: p.body } };
+}
+// \u00A73.1: what the selection in After Effects points at
+function jzCESel() {
+    var c = app.project.activeItem;
+    if (!c || !jzCEIsComp(c)) return { ok: false, why: 'nocomp' };
+    var t = jzCETag(c), i;
+    if (t && t.k === 'main') {
+        var sel = c.selectedLayers;
+        if (!sel.length) return { ok: false, why: 'noselect', compId: c.id, compName: c.name, main: t.uid };
+        var L = sel[0], S = null;
+        try { S = L.source && jzCEIsComp(L.source) ? L.source : null; } catch (e) { S = null; }
+        var ts = S ? jzCETag(S) : null;
+        if (ts && ts.k === 'cut') return jzCECutInfo(c, L, S, 'layer');
+        if (/^JZ (Trans|FX) /.test(L.name)) {
+            var W = jzCEWrappers(c), t0 = L.inPoint;
+            for (i = W.length - 1; i >= 0; i--) if (t0 >= W[i].L.inPoint - 1e-4 && t0 < W[i].L.outPoint) return jzCECutInfo(c, W[i].L, W[i].comp, 'fxlayer');
+        }
+        return { ok: false, why: 'notcut', compId: c.id, compName: c.name, main: t.uid };
+    }
+    var wc = null;
+    if (t && t.k === 'cut') wc = c;
+    else if (t && (t.k === 'content' || t.k === 'ghost')) {
+        var u = []; try { u = c.usedIn; } catch (e2) { u = []; }
+        for (i = 0; i < u.length && !wc; i++) { var tu = jzCETag(u[i]); if (tu && tu.k === 'cut' && tu.uid === t.uid) wc = u[i]; }
+    }
+    if (!wc) return { ok: false, why: 'notjizura' };
+    var main = jzCEMainOf(wc, jzCETag(wc).main), L2 = main ? jzCELayerOf(main, wc) : null;
+    if (!main || !L2) return { ok: false, why: 'orphan' };
+    return jzCECutInfo(main, L2, wc, 'inside');
+}
+function jzCESelLite() {
+    var c = app.project.activeItem;
+    if (!c || !jzCEIsComp(c)) return { ok: true, compId: 0, layerId: 0, n: 0 };
+    var s = c.selectedLayers, lid = 0; try { lid = s.length ? s[0].id : 0; } catch (e) { lid = s.length ? s[0].index : 0; }
+    return { ok: true, compId: c.id, layerId: lid, n: s.length };
+}
+function jzCEMainById(id) { var c = jzCEFindItem(id); if (!c || !jzCEIsComp(c)) return null; var t = jzCETag(c); return t && t.k === 'main' ? c : null; }
+function jzCEHeader(id) {
+    var c = jzCEMainById(id); if (!c) return { ok: false, error: 'JIZURA \u306E\u30B3\u30F3\u30DD\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093' };
+    var h = jzCEHeaderText(c);
+    if (h == null) return { ok: false, error: '\u3053\u306E\u30B3\u30F3\u30DD\u306E\u69CB\u6210\u60C5\u5831\u304C\u8AAD\u3081\u307E\u305B\u3093\uFF08\u30B3\u30E1\u30F3\u30C8\u304C\u6D88\u3048\u3066\u3044\u308B\u304B\u3001\u7D9A\u304D\u306E cuts \u30D5\u30A9\u30EB\u30C0\u304C\u3042\u308A\u307E\u305B\u3093\uFF09' };
+    return { ok: true, compId: c.id, compName: c.name, h: { __jzRaw: h } };
+}
+function jzCECuts(id) {
+    var c = jzCEMainById(id); if (!c) return { ok: false, error: 'JIZURA \u306E\u30B3\u30F3\u30DD\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093' };
+    var W = jzCEWrappers(c), out = [];
+    for (var i = 0; i < W.length; i++) {
+        var lid = null; try { lid = W[i].L.id; } catch (e) { lid = null; }
+        out.push({ uid: W[i].tag.uid, layerId: lid, layerIndex: W[i].L.index, timeline: { startTime: W[i].L.startTime, inPoint: W[i].L.inPoint, outPoint: W[i].L.outPoint }, cut: { __jzRaw: jzCEPart(W[i].comp).body } });
+    }
+    return { ok: true, compId: c.id, cuts: out };
+}
+function jzCEParts() {
+    var g = ['layout', 'enter', 'hold', 'exit', 'decor', 'treat', 'bg', 'cam', 'trans'], o = {};
+    for (var i = 0; i < g.length; i++) o[g[i]] = jzOrder(g[i]);
+    return { ok: true, orders: o };
+}
+function jzCESelectLayer(id, uid) {
+    var c = jzCEMainById(id); if (!c) return { ok: false, error: 'JIZURA \u306E\u30B3\u30F3\u30DD\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093' };
+    var W = jzCEWrappers(c), hit = null, i;
+    for (i = 0; i < W.length && !hit; i++) if (W[i].tag.uid === uid) hit = W[i].L;
+    if (!hit) return { ok: false, error: '\u305D\u306E\u30AB\u30C3\u30C8\u306E\u30EC\u30A4\u30E4\u30FC\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093' };
+    for (i = 1; i <= c.numLayers; i++) c.layer(i).selected = false;
+    hit.selected = true;
+    try { c.time = hit.inPoint; } catch (e) {}
+    try { c.openInViewer(); } catch (e2) {}
+    return { ok: true, layerId: hit.id };
+}
+// keep the panel's overrides of a cut in its wrapper comment (so they survive closing the panel)
+function jzCEWriteEdit(id, uid, editJson) {
+    var c = jzCEMainById(id); if (!c) return { ok: false, error: 'JIZURA \u306E\u30B3\u30F3\u30DD\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093' };
+    var W = jzCEWrappers(c), n = 0;
+    for (var i = 0; i < W.length; i++) if (W[i].tag.uid === uid && !W[i].done) {
+        var rec = jzParseJSON(jzCEPart(W[i].comp).body);
+        rec.edit = jzParseJSON(editJson);
+        var body = jzCEStr(rec);
+        if (body.length > JZ_CE_LIMIT) return { ok: false, error: '\u7DE8\u96C6\u5185\u5BB9\u304C\u5927\u304D\u3059\u304E\u307E\u3059' };
+        jzCEWrite(W[i].comp, body); n++;
+        for (var k = 0; k < W.length; k++) if (W[k].comp === W[i].comp) W[k].done = true;
+    }
+    return n ? { ok: true } : { ok: false, error: '\u305D\u306E\u30AB\u30C3\u30C8\u306E\u30EC\u30A4\u30E4\u30FC\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093' };
+}
+
+// ---------------------------------------------------------------- rebuild helpers
+// the song layer of an old main comp (moved over to the new one)
+function jzCEAudioOf(comp) {
+    for (var i = 1; i <= comp.numLayers; i++) { var L = comp.layer(i); try { if (L.hasAudio && L.source && L.source.file) return { item: L.source, start: L.startTime }; } catch (e) {} }
+    return null;
+}
+// remove a built comp and everything it made that nothing else uses (comps only; the cuts folder once empty).
+// Returns false and removes nothing when another comp uses the main comp.
+function jzCERemoveTree(comp) {
+    var used = []; try { used = comp.usedIn; } catch (e) { used = []; }
+    if (used.length) return false;
+    var set = [], seen = {}, todo = [comp], C, i, L, folders = [];
+    while (todo.length) {
+        C = todo.pop(); if (seen[C.id]) continue; seen[C.id] = true; set.push(C);
+        for (i = 1; i <= C.numLayers; i++) { L = C.layer(i); try { if (L.source && jzCEIsComp(L.source)) todo.push(L.source); } catch (e1) {} }
+    }
+    for (i = 1; i < set.length; i++) { try { var f = set[i].parentFolder; if (f && f !== app.project.rootFolder && jzIndexOf(folders, f) < 0) folders.push(f); } catch (e2) {} }
+    comp.remove();
+    var alive = set.slice(1), changed = true;
+    while (changed) {
+        changed = false;
+        for (i = alive.length - 1; i >= 0; i--) {
+            var u = []; try { u = alive[i].usedIn; } catch (e3) { u = null; }
+            if (u && u.length === 0) { try { alive[i].remove(); } catch (e4) {} alive.splice(i, 1); changed = true; }
+        }
+    }
+    for (i = 0; i < folders.length; i++) { try { if (folders[i].numItems === 0) folders[i].remove(); } catch (e5) {} }
+    return true;
+}
+
+// ---------------------------------------------------------------- replace one cut (\u00A77): the rest of the comp \u2014 and what the user changed there \u2014 stays
+// the transition layers of the boundary at time t into a cut of length dur: every transition names its layers 'JZ Trans \u2026'
+// and they live within [t, t + its length], which is at most 0.6 x the cut (jzBuildTrans) \u2014 so never past the next boundary
+function jzCERemoveTransAt(comp, t, dur) {
+    for (var i = comp.numLayers; i >= 1; i--) { var L = comp.layer(i); if (/^JZ Trans /.test(L.name) && L.inPoint > t - 0.06 && L.inPoint < t + Math.max(0.1, dur * 0.6) + 0.02) L.remove(); }
+}
+// a wrapper layer's transition effects: 'out' = those it got as the previous cut (named 'JZ Trans out \u2026'), else those it got as the new cut
+function jzCERemoveTransFx(L, out) {
+    var fx = L.property('ADBE Effect Parade');
+    for (var i = fx.numProperties; i >= 1; i--) { var n = fx.property(i).name; if (/^JZ Trans /.test(n) && /^JZ Trans out /.test(n) === out) fx.property(i).remove(); }
+}
+// the wrapper {cut, layer, comp, sc} of a neighbour cut for jzBuildTrans (its scheme after its own overrides)
+function jzCENeighbour(E, cut, L) {
+    cut.dur = cut.end - cut.start;
+    return { cut: cut, layer: L, comp: L.source, sc: jzCutCtx(cut, E.st, E.FXV, E.schemeOf(cut)).sc };
+}
+// d = {plan (whole, like a rebuild), ci (the cut's place in plan.cuts), uids (parallel to plan.cuts), layerId, layerIndex}
+function jzCEReplace(mainId, d, opt) {
+    opt = opt || {};
+    var main = jzCEMainById(mainId); if (!main) return { ok: false, error: 'JIZURA \u306E\u30B3\u30F3\u30DD\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093' };
+    var plan = d.plan, ci = d.ci, cuts = plan.cuts, cut = cuts[ci], uids = d.uids || [], notes = [], i;
+    if (!cut || !(cut.end > cut.start)) return { ok: false, error: '\u3053\u306E\u30AB\u30C3\u30C8\u306F\u5DEE\u3057\u66FF\u3048\u3089\u308C\u307E\u305B\u3093' };
+    var W = jzCEWrappers(main), w0 = null, prevL = null, nextL = null;
+    for (i = 0; i < W.length && !w0; i++) { var lid = null; try { lid = W[i].L.id; } catch (e) { lid = null; } if (lid != null && lid === d.layerId) w0 = W[i]; }
+    for (i = 0; i < W.length && !w0; i++) if (W[i].L.index === d.layerIndex && W[i].tag.uid === uids[ci]) w0 = W[i];
+    if (!w0) return { ok: false, error: '\u5DEE\u3057\u66FF\u3048\u308B\u30EC\u30A4\u30E4\u30FC\u304C\u898B\u3064\u304B\u308A\u307E\u305B\u3093\uFF08\u300C\u9078\u629E\u3092\u8AAD\u3080\u300D\u3067\u8AAD\u307F\u76F4\u3057\u3066\u304F\u3060\u3055\u3044\uFF09' };
+    for (i = 0; i < W.length; i++) {
+        if (ci > 0 && !prevL && W[i].tag.uid === uids[ci - 1]) prevL = W[i].L;
+        if (ci + 1 < cuts.length && !nextL && W[i].tag.uid === uids[ci + 1]) nextL = W[i].L;
+    }
+    var prev = prevL ? cuts[ci - 1] : null, next = nextL ? cuts[ci + 1] : null;
+    if (ci > 0 && !prevL) notes.push('\u524D\u306E\u30AB\u30C3\u30C8\u306E\u30EC\u30A4\u30E4\u30FC\u304C\u898B\u3064\u304B\u3089\u306A\u3044\u306E\u3067\u3001\u524D\u3068\u306E\u3064\u306A\u304E\u306F\u4F5C\u308A\u307E\u305B\u3093');
+    if (ci + 1 < cuts.length && !nextL) notes.push('\u6B21\u306E\u30AB\u30C3\u30C8\u306E\u30EC\u30A4\u30E4\u30FC\u304C\u898B\u3064\u304B\u3089\u306A\u3044\u306E\u3067\u3001\u6B21\u3068\u306E\u3064\u306A\u304E\u306F\u4F5C\u308A\u307E\u305B\u3093');
+    var L0 = w0.L, oldComp = w0.comp, oldUid = w0.tag.uid, folder = null;
+    try { folder = oldComp.parentFolder; } catch (ef) { folder = null; }
+    var E = jzBuildEnv(plan, { roles: opt.roles }, main, folder);
+    // the new wrapper, in the old layer's place (stacking order, label, shy, parent)
+    var w = jzBuildCut(E, cut, ci);
+    w.layer.moveBefore(L0);
+    try { w.layer.label = L0.label; w.layer.shy = L0.shy; if (L0.parent) w.layer.parent = L0.parent; } catch (e1) {}
+    // boundaries: take away what the old transitions made, then build the plan's
+    jzCERemoveTransAt(main, cut.start, Math.max(cut.end - cut.start, w0.L.outPoint - w0.L.inPoint));
+    if (prevL) { jzCERemoveTransFx(prevL, true); prevL.outPoint = prev.end; }
+    if (nextL) { jzCERemoveTransAt(main, next.start, next.end - next.start); jzCERemoveTransFx(nextL, false); }
+    L0.remove();
+    if (prevL && cut.trans) jzBuildTrans(E, jzCENeighbour(E, prev, prevL), w);
+    if (nextL && next.trans) jzBuildTrans(E, w, jzCENeighbour(E, next, nextL));
+    // the old wrapper tree goes when nothing else uses it (a duplicated layer may)
+    try { if (!jzCERemoveTree(oldComp)) notes.push('\u524D\u306E\u30AB\u30C3\u30C8\u306E\u30B3\u30F3\u30DD\u306F\u307B\u304B\u306E\u30EC\u30A4\u30E4\u30FC\u304C\u4F7F\u3063\u3066\u3044\u308B\u306E\u3067\u6B8B\u3057\u307E\u3057\u305F'); } catch (e2) { notes.push('\u524D\u306E\u30AB\u30C3\u30C8\u306E\u30B3\u30F3\u30DD\u3092\u524A\u9664\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F: ' + e2.toString()); }
+    try { jzTidyTree(w.comp); } catch (et) { jzWarn('tidy: ' + et.toString()); }
+    // comments: the new wrapper (base / edit stay as sent), the header's cut list
+    var mt = jzCETag(main), cuid = 'c-' + jzCEHash36(mt.uid, ci, cut.start, new Date().getTime());
+    if (!jzCEStampCut(w.comp, plan, ci, cuid, mt.uid, notes)) return { ok: false, error: '\u30AB\u30C3\u30C8\u306E\u69CB\u6210\u3092\u4FDD\u5B58\u3067\u304D\u307E\u305B\u3093\u3067\u3057\u305F', notes: notes };
+    var h = jzCEHeaderText(main);
+    if (h != null) { var err = jzCEWriteHeader(main, folder, mt.uid, h.split('"' + oldUid + '"').join('"' + cuid + '"')); if (err) notes.push(err); }
+    else notes.push('\u69CB\u6210\u60C5\u5831\uFF08\u30D8\u30C3\u30C0\uFF09\u304C\u8AAD\u3081\u306A\u3044\u305F\u3081\u3001\u30AB\u30C3\u30C8\u4E00\u89A7\u306F\u66F4\u65B0\u3057\u3066\u3044\u307E\u305B\u3093');
+    var log = JZLOG || []; for (i = 0; i < log.length && notes.length < 20; i++) notes.push(String(log[i]));
+    return { ok: true, uid: cuid, layerId: w.layer.id, compId: main.id, notes: notes };
+}
+
+var JZ_CUTEDIT = { stamp: jzCEStamp, replace: jzCEReplace, sel: jzCESel, selLite: jzCESelLite, header: jzCEHeader, cuts: jzCECuts, parts: jzCEParts, selectLayer: jzCESelectLayer,
+    writeEdit: jzCEWriteEdit, audioOf: jzCEAudioOf, removeTree: jzCERemoveTree, mainById: jzCEMainById, tag: jzCETag, json: jzCEStr, headerText: jzCEHeaderText, limit: function (n) { if (n > 0) JZ_CE_LIMIT = n; return JZ_CE_LIMIT; } };
 
 // ================================================================ diagnostics (real After Effects)
 // Walks a built comp tree, evaluates every expression at a few times and collects AE's own error messages

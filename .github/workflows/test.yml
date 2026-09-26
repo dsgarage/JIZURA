@@ -21,3 +21,25 @@ jobs:
       - run: python3 build_cep.py
       # ビルド成果物（index.html 等・ae/data.json・JIZURA_AE*.jsx）がコミット済みのものと一致すること
       - run: git diff --exit-code --stat
+      # AE エンジン（モック）とカット編集のテスト（docs/dsgarage/CUT_EDIT_SPEC.md §9）
+      - run: npm ci
+        working-directory: dev
+      - run: node dev/ae_test.js
+      - run: node dev/cutedit_test.js
+  # パネルの UI テスト（Playwright）。Chromium の導入が重いので必須チェックにはしない
+  cep-ui:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: pip install playwright && python3 -m playwright install --with-deps chromium
+      - run: python3 build.py && python3 build_cep.py
+      - run: npm ci
+        working-directory: dev
+      - run: python3 dev/cutedit_ui_test.py

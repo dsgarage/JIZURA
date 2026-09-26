@@ -43,12 +43,14 @@ bridge = open('cep/cep.js', encoding='utf-8').read()
 if english:
     bridge = localize_cep(bridge)
     html = html.replace('</style>', 'html.cep .lang-switch{display:none}\n</style>', 1)
+bridge += '\n' + open('cep/cutedit.js', encoding='utf-8').read()          # the cut editor tab (Japanese only for now)
 html = html.replace('</body>', '<script>\n' + bridge + '\n</script>\n</body>', 1)
 open(os.path.join(ext, 'index.html'), 'w', encoding='utf-8').write(html)
 
 # 2) ExtendScript side: host + the build engine (same code as JIZURA_AE.jsx, without its ScriptUI)
 host = open('cep/host.jsx', encoding='utf-8').read()
 open(os.path.join(ext, 'jsx', 'host.jsx'), 'w', encoding='utf-8').write(es_escape(localize_cep(host, host=True) if english else host))
+open(os.path.join(ext, 'jsx', 'host_cutedit.jsx'), 'w', encoding='utf-8').write(es_escape(open('cep/host_cutedit.jsx', encoding='utf-8').read()))
 subprocess.run([sys.executable, 'build_ae.py', '--core', '--lang', a.lang, '--out', os.path.join(ext, 'jsx', 'jizura_core.jsx')], check=True, stdout=subprocess.DEVNULL)
 
 # 3) manifest (+ optional remote-debug file)
