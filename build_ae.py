@@ -14,7 +14,7 @@ a = ap.parse_args()
 if a.out is None: a.out = 'dist/JIZURA_CEP/jsx/jizura_core.jsx' if a.core else ('JIZURA_AE_en.jsx' if a.lang == 'en' else 'JIZURA_AE.jsx')
 allpacks = sorted(os.path.basename(f)[:-4] for f in glob.glob('ae/p_*.jsx'))
 packs = allpacks if a.packs is None else ([] if a.packs == 'none' else [p.strip().replace('.jsx', '').replace('ae/', '') for p in a.packs.split(',') if p.strip()])
-parts = ['00_core', '05_reg', '10_helpers', '15_plan', '16_omakase', '20_motion', '30_layouts', '40_decor', '45_core'] + packs + ['50_build', '55_diag'] + ([] if a.core else ['90_ui'])
+parts = ['00_core', '05_reg', '10_helpers', '15_plan', '16_omakase', '20_motion', '30_layouts', '40_decor', '45_core'] + packs + ['50_build', '52_cutedit', '55_diag'] + ([] if a.core else ['90_ui'])
 data = json.load(open('ae/data.json', encoding='utf-8'))
 if a.lang == 'en':
     labels = json.loads(subprocess.check_output(['node', 'tools/export_english_labels.js'], text=True))
@@ -37,7 +37,7 @@ head = '''/*  JIZURA 字面 — lyric motion panel for Adobe After Effects  (v2.
 if a.core:
     head = '/*  JIZURA 字面 — After Effects build engine for the CEP panel (v2.0). Loaded by host.jsx. */\n'
     api = ('$.global.JZ_CORE = { version: 3, build: jzBuild, start: jzBuildStart, makePlan: jzMakePlan, keyStyle: jzKeyStyle, parse: jzParseJSON, '
-           'log: function () { return JZLOG; }, fallbacks: function () { return JZ_FALLBACKS; }, missingFonts: jzMissingFonts, diagnose: jzDiagnose, saveReport: jzSaveReport, parts: jzPartsCount, panelVersion: JZ_PANEL_VERSION, fontCheckUnavailable: function () { return JZ_FONT_NOAPI; }, roleDefault: JZ_ROLE_DEFAULT, data: JZ_DATA };')
+           'log: function () { return JZLOG; }, fallbacks: function () { return JZ_FALLBACKS; }, missingFonts: jzMissingFonts, diagnose: jzDiagnose, saveReport: jzSaveReport, parts: jzPartsCount, panelVersion: JZ_PANEL_VERSION, fontCheckUnavailable: function () { return JZ_FONT_NOAPI; }, roleDefault: JZ_ROLE_DEFAULT, data: JZ_DATA, cutEdit: JZ_CUTEDIT };')
     src = head + '(function () {\nvar JZ_DATA = ' + json.dumps(data, ensure_ascii=True) + ';\n' + body + '\n' + api + '\n})();\n'
 else:
     if a.lang == 'en': head = head.replace('JIZURA 字面', 'JIZURA')

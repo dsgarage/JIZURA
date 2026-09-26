@@ -38,6 +38,7 @@ function connect() {
     status('After Effects に接続中…（初回は数秒かかります）');
     const root = extRoot();
     if ((await ev('typeof JZCEP')) !== 'object' && root) await ev('$.evalFile(File(' + JSON.stringify(root + '/jsx/host.jsx') + '))');
+    if ((await ev('typeof JZCEP.cutSel')) !== 'function' && root) await ev('$.evalFile(File(' + JSON.stringify(root + '/jsx/host_cutedit.jsx') + '))');   // カット編集 (cutedit.js)
     const r = parse(await ev('JZCEP.init(' + JSON.stringify(root) + ')'));
     ready = !!r.ok;
     status(ready ? `After Effects ${String(r.app || '').split('x')[0]} に接続しました` : 'After Effects に接続できませんでした: ' + r.error, !ready);
@@ -59,7 +60,9 @@ async function buildInAE() {
   try {
     UI.pause && UI.pause();
     const range = UI.exportRange ? UI.exportRange() : null, R = range && UI.exportRangeLines ? UI.exportRangeLines() : null;
-    const plan = J.planForAE(S.plan, S.project, range), txt = JSON.stringify(plan);
+    const plan = J.planForAE(S.plan, S.project, range);
+    if (J.cutEdit) plan.__project = J.cutEdit.packProject(S.project);          // kept in the comp for the cut editor's 読み戻し
+    const txt = JSON.stringify(plan);
     if (!plan.cuts.length) { status('選んだ範囲にカットがありません', true); return; }
     const useAudio = aeAudio && (!$('aeAudioIn') || $('aeAudioIn').checked);
     const aid = useAudio ? (aeAudio.id | 0) : 0;
